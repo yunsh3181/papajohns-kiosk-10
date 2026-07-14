@@ -2165,3 +2165,18 @@ html,body{
 .dine-setup-shell .seat-screen-v38 .seat-card{background:#0a3927;color:#fff;border-color:rgba(255,255,255,.12)}
 .dine-setup-shell .group-zone-note,.dine-setup-shell .compact-entrance{background:rgba(255,255,255,.06);color:#d7e7de;border-color:rgba(255,255,255,.1)}
 @media(max-width:900px){.zone-grid-v32{grid-template-columns:1fr}.zone-photo-card{min-height:220px}.zone-photo-card strong{font-size:30px}}
+
+
+/* v40.7 seating-zone photo update */
+.zone-screen-v32 .title{font-size:48px;letter-spacing:-1.6px;margin-bottom:8px}
+.zone-title-accent{color:#26bd6b}
+.zone-screen-v32 .sub{color:#c8d7cf;margin-bottom:24px}
+.zone-photo-card{min-height:310px;border:2px solid rgba(49,171,103,.35);background-position:center;isolation:isolate}
+.zone-photo-card::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,18,11,.70) 0%,rgba(0,18,11,.20) 58%,rgba(0,18,11,.06) 100%);z-index:1;pointer-events:none}
+.zone-photo-card .zone-card-copy{z-index:2;gap:8px}
+.zone-photo-card strong{font-size:38px}
+.zone-photo-card .zone-capacity{font-size:24px;color:#27d276;font-weight:900;letter-spacing:-.5px}
+.zone-photo-card small{font-size:17px;line-height:1.45;max-width:390px}
+.zone-photo-card em{font-size:13px;background:rgba(0,32,20,.76);color:#d9eee3;border:1px solid rgba(255,255,255,.12);padding:6px 10px}
+.zone-card-arrow{z-index:3;width:54px;height:54px;font-size:30px;background:rgba(0,0,0,.30)}
+@media(max-width:900px){.zone-screen-v32 .title{font-size:36px}.zone-photo-card{min-height:240px}.zone-photo-card .zone-capacity{font-size:20px}}

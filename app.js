@@ -225,10 +225,10 @@ function calc(){
 
 
 const SEAT_ZONES=[
- {id:'papa',name:'파파존',img:'images/seats/papa_zone.png',desc:'편안한 실내에서 피자를 즐겨보세요.'},
- {id:'outside',name:'야외석',img:'images/seats/outside_zone.png',desc:'야외에서 시원하게 즐겨보세요.'},
- {id:'bottle',name:'별관',img:'images/seats/bottle_zone.png',desc:'조용하고 쾌적한 별관 공간입니다.'},
- {id:'room',name:'별관룸',img:'images/seats/room_zone.png',desc:'프라이빗한 모임을 위한 공간입니다.'}
+ {id:'papa',name:'파파존',img:'images/seats/papa_zone.jpg',desc:'편안한 실내에서 피자를 즐겨보세요.',capacityLabel:'1인 ~ 4인'},
+ {id:'outside',name:'야외석',img:'images/seats/outside_zone.jpg',desc:'야외에서 시원하게 즐겨보세요.',capacityLabel:'2인 ~ 16인'},
+ {id:'bottle',name:'별관',img:'images/seats/bottle_zone.jpg',desc:'조용하고 쾌적한 별관 공간입니다.',capacityLabel:'2인 ~ 5인'},
+ {id:'room',name:'별관룸',img:'images/seats/room_zone.jpg',desc:'프라이빗한 모임을 위한 공간입니다.',capacityLabel:'6인 ~ 12인'}
 ];
 const SEAT_MASTER=[
  {id:'papa-1',zone:'papa',name:'커플석',label:'Papa 1',capacity:2},
@@ -770,14 +770,14 @@ function renderBase(){
 
     const count=SEAT_MASTER.filter(s=>s.zone===z.id).map(s=>seatInfo(s.id)).filter(s=>s.status==='empty').length;
     const icon=z.id==='papa'?'🍕':z.id==='outside'?'⛱️':z.id==='bottle'?'🪑':'🛋️';
-    const capacity=z.id==='room'||z.id==='outside'?`<span class="zone-capacity">${zoneCapacityText(z.id)}</span>`:'';
+    const capacity=`<span class="zone-capacity">${z.capacityLabel}</span>`;
 
     return `<button class="seat-zone-card zone-photo-card ${allowed?'':'zone-disabled'}" ${allowed?'':'disabled'} onclick="chooseSeatZone('${z.id}')" style="background-image:linear-gradient(180deg,rgba(0,12,7,.05),rgba(0,14,8,.88)),url('${z.img}')">
-      <span class="zone-card-copy"><strong>${z.name}</strong><small>${z.desc}</small>${capacity}<em>${allowed?`이용 가능 ${count}`:`🔒 ${reason}`}</em></span>
+      <span class="zone-card-copy"><strong>${z.name}</strong>${capacity}<small>${z.desc}</small><em>${allowed?`이용 가능 좌석 ${count}`:`🔒 ${reason}`}</em></span>
       <span class="zone-card-arrow">→</span>
     </button>`;
   }).join('');
-  return shell(`<section class="seat-screen zone-screen-v32"><h1 class="title">구역을 선택해 주세요</h1><p class="sub">${state.partySize}명 기준으로 이용 가능한 구역입니다.</p><div class="seat-zone-grid zone-grid-v32">${zones}</div></section>`,{auto:true});
+  return shell(`<section class="seat-screen zone-screen-v32"><h1 class="title">어디에 <span class="zone-title-accent">앉으시겠어요?</span></h1><p class="sub">원하시는 구역을 선택해 주세요. · 현재 ${state.partySize}명</p><div class="seat-zone-grid zone-grid-v32">${zones}</div></section>`,{auto:true});
  }
  if(state.step==='seatSelect'){
   subscribeSeats();
