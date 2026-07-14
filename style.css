@@ -2768,3 +2768,50 @@ html,body{
 .phone-order-guide{max-width:620px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:#123b5b;color:#eaf6ff;font-weight:900;text-align:center}
 .seat-zone-card:not(.zone-disabled) em{color:#fff!important}
 .seat-zone-card:not(.zone-disabled) em:last-child{font-weight:950}
+
+/* v41.1: 선택 강조, 하프앤하프 R 제한, 일반주문 음료 4카드 정리 */
+.topping-choice-card.selected{
+  border-color:#39b86a!important;
+  background:linear-gradient(160deg,#174f32,#10291d)!important;
+  box-shadow:0 0 0 4px rgba(57,184,106,.2),0 14px 34px rgba(0,0,0,.25)!important;
+  transform:translateY(-2px);
+}
+.topping-choice-card.selected strong,
+.topping-choice-card.selected span{color:#fff!important}
+.topping-choice-card.selected::after{
+  content:'✓ 선택됨';position:absolute;top:16px;right:16px;padding:7px 11px;border-radius:999px;
+  background:#39b86a;color:#fff;font-size:13px;font-weight:900;
+}
+.topping-choice-card{position:relative}
+
+/* 일반주문 음료는 정확히 네 개의 패밀리 카드로 표시 */
+.drink-family-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:18px!important}
+.drink-family-card{
+  grid-template-columns:150px minmax(0,1fr)!important;
+  min-height:250px!important;
+  background:#18211d!important;
+  border-color:#3d4d45!important;
+  color:#fff!important;
+}
+.drink-family-content h3{color:#fff!important}
+.drink-family-image{
+  display:block!important;
+  width:120px!important;
+  height:190px!important;
+  max-width:120px!important;
+  max-height:190px!important;
+  margin:0 auto!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:transparent!important;
+  mix-blend-mode:normal!important;
+  filter:none!important;
+}
+.drink-size-buttons{display:grid;grid-template-columns:1fr;gap:10px}
+.drink-size-stepper{min-height:72px}
+
+@media(max-width:760px){
+  .drink-family-grid{grid-template-columns:1fr!important}
+  .drink-family-card{grid-template-columns:96px minmax(0,1fr)!important;min-height:170px!important}
+  .drink-family-image{width:78px!important;height:130px!important;max-width:78px!important;max-height:130px!important}
+}
