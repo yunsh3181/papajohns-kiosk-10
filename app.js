@@ -4,6 +4,10 @@ const state={step:'home',orderType:null,promo:null,dough:null,size:null,crust:nu
 const steps=['home','type','partySize','pickup','pickupTime','phone','seatZone','seatSelect','waiting','waitingDone','promo','setChoice','pizzaMode','dough','size','crust','pizza','topping','side','drink','review','cart','done'];
 const labels={waiting:'줄서기',waitingDone:'줄서기 완료',type:'이용방법',partySize:'인원 선택',pickup:'포장 방식',pickupTime:'예약 시간',phone:'전화번호',seatZone:'구역 선택',seatSelect:'좌석 선택',promo:'혜택',setChoice:'세트 선택',pizzaMode:'피자 구성',dough:'도우',size:'사이즈',crust:'크러스트',pizza:'피자',topping:'토핑',side:'사이드',drink:'음료',review:'주문확인',cart:'장바구니'};
 
+// 테스트 기간 임시 설정: true이면 먹고가기 구역 운영시간 제한을 무시합니다.
+// 운영 전에는 false로 변경하세요.
+const DINEIN_TEST_MODE=true;
+
 const STORE_OPEN_MIN=11*60;
 const STORE_CLOSE_MIN=21*60;
 const HAPPY_START_MIN=16*60;
@@ -90,7 +94,7 @@ function confirmPhone(){
  state.step='promo';
  render();
 }
-function zoneAvailability(zone){const r=ZONE_RULES[zone],d=new Date(),weekend=[0,6].includes(d.getDay()),m=nowMinutes();if(!r.weekend&&weekend)return {open:false,reason:'주말 미운영'};if(m<r.open||m>r.close)return {open:false,reason:`${pad2(Math.floor(r.open/60))}:00~${pad2(Math.floor(r.close/60))}:00 운영`};return {open:true,reason:'운영 중'}}
+function zoneAvailability(zone){if(DINEIN_TEST_MODE)return {open:true,reason:'테스트 모드 · 시간 제한 없음'};const r=ZONE_RULES[zone],d=new Date(),weekend=[0,6].includes(d.getDay()),m=nowMinutes();if(!r.weekend&&weekend)return {open:false,reason:'주말 미운영'};if(m<r.open||m>r.close)return {open:false,reason:`${pad2(Math.floor(r.open/60))}:00~${pad2(Math.floor(r.close/60))}:00 운영`};return {open:true,reason:'운영 중'}}
 
 
 
@@ -630,18 +634,18 @@ function orderStageIndex(){
 function orderSidebar(){
  const stages=[['세트 선택','promo'],['피자 선택','pizza'],['크러스트 선택','crust'],['사이드 선택','side'],['음료 선택','drink'],['주문 확인','review']];
  const active=orderStageIndex(); const c=calc(); const count=selectedCount('sides')+selectedCount('includedSides')+selectedCount('drinks')+selectedCount('includedDrinks');
- return `<aside class="order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="order-type-stack"><div class="order-type-pill ${state.orderType==='takeout'?'active':''}"><b>▣</b><span>포장 주문<small>TAKE OUT</small></span>${state.orderType==='takeout'?'<i>✓</i>':''}</div><div class="order-type-pill ${state.orderType==='dinein'?'active':''}"><b>♨</b><span>먹고가기<small>DINE IN</small></span>${state.orderType==='dinein'?'<i>✓</i>':''}</div></div><div class="sidebar-stage-title">주문 단계</div><nav class="sidebar-stages">${stages.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="reselectCurrent()">↻ 다시선택</button><button onclick="goHome()">⌂ 처음으로</button></div><div class="sidebar-cart">🛒 <strong>${count}개 · ${money(c.total)}</strong></div><small class="sidebar-version">v40.6</small></aside>`;
+ return `<aside class="order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="order-type-stack"><div class="order-type-pill ${state.orderType==='takeout'?'active':''}"><b>▣</b><span>포장 주문<small>TAKE OUT</small></span>${state.orderType==='takeout'?'<i>✓</i>':''}</div><div class="order-type-pill ${state.orderType==='dinein'?'active':''}"><b>♨</b><span>먹고가기<small>DINE IN</small></span>${state.orderType==='dinein'?'<i>✓</i>':''}</div></div><div class="sidebar-stage-title">주문 단계</div><nav class="sidebar-stages">${stages.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="reselectCurrent()">↻ 다시선택</button><button onclick="goHome()">⌂ 처음으로</button></div><div class="sidebar-cart">🛒 <strong>${count}개 · ${money(c.total)}</strong></div><small class="sidebar-version">v40.8</small></aside>`;
 }
 function preOrderSidebar(){
  const flow=[['주문방식','type'],['포장방식','pickup'],['픽업시간','pickupTime'],['전화번호','phone']];
  const active=Math.max(0,flow.findIndex(x=>x[1]===state.step));
- return `<aside class="order-sidebar pre-order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">포장 주문 설정</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 초기화면</button></div><small class="sidebar-version">v40.6</small></aside>`;
+ return `<aside class="order-sidebar pre-order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">포장 주문 설정</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 초기화면</button></div><small class="sidebar-version">v40.8</small></aside>`;
 }
 
 function dineSetupSidebar(){
  const flow=[['인원 선택','partySize'],['구역 선택','seatZone'],['좌석 선택','seatSelect'],['메뉴 선택','promo'],['주문 확인','review']];
  const active=Math.max(0,flow.findIndex(x=>x[1]===state.step));
- return `<aside class="order-sidebar dine-setup-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">먹고가기 주문</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 초기화면</button></div><small class="sidebar-version">v40.6</small></aside>`;
+ return `<aside class="order-sidebar dine-setup-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">먹고가기 주문</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 초기화면</button></div><small class="sidebar-version">v40.8</small></aside>`;
 }
 
 function preOrderIndicator(){
