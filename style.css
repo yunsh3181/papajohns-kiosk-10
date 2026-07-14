@@ -2129,3 +2129,39 @@ html,body{
   .home-image-stage.home-v40-5{display:block!important;width:100vw!important;max-width:none!important}
   .papa-home-image{min-height:auto!important;height:auto!important;overflow:auto!important;place-items:start center!important}
 }
+
+/* v40.6 dine-in setup refresh */
+.dine-setup-shell{background:#041e13;color:#fff;min-height:100vh}
+.dine-setup-shell .shell-content{background:radial-gradient(circle at 70% 12%,rgba(20,95,61,.18),transparent 35%),linear-gradient(135deg,#061f15 0%,#03150e 100%)}
+.dine-setup-shell .header{background:rgba(3,24,15,.9);border-bottom:1px solid rgba(255,255,255,.08)}
+.dine-setup-shell .header .progress,.dine-setup-shell .store-name{color:#dcebe3}
+.dine-setup-shell .title{color:#fff}
+.dine-setup-shell .sub{color:#a9c2b4}
+.dine-setup-shell .main{background:transparent}
+.dine-setup-shell .footer{background:rgba(3,24,15,.94);border-top:1px solid rgba(255,255,255,.08);color:#fff}
+.dine-setup-sidebar{background:linear-gradient(180deg,#073b27 0%,#052a1c 58%,#031d13 100%);border-right:1px solid rgba(255,255,255,.1)}
+.dine-setup-sidebar .sidebar-stage-title{color:#9fd0b7}
+.dine-setup-sidebar .sidebar-stage{color:#9eb5a8}
+.dine-setup-sidebar .sidebar-stage.active{background:rgba(255,255,255,.08);color:#fff}
+.dine-setup-sidebar .sidebar-stage.active span{background:#d71920;color:#fff}
+.dine-setup-sidebar .sidebar-stage.done span{background:#2e8b57;color:#fff}
+.dine-setup-sidebar .sidebar-actions button{background:rgba(255,255,255,.05);color:#eaf4ee;border-color:rgba(255,255,255,.15)}
+.dine-setup-shell .party-counter-card{background:rgba(7,48,31,.78);border:1px solid rgba(124,191,154,.25);box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.dine-setup-shell .party-count-value,.dine-setup-shell .party-counter-card small{color:#fff}
+.dine-setup-shell .party-step{background:#0c5437;color:#fff;border-color:rgba(255,255,255,.16)}
+.dine-setup-shell .party-step:hover{background:#126c48}
+.dine-setup-shell .party-capacity-note,.dine-setup-shell .party-room-note{background:rgba(255,255,255,.05);color:#c5d8cd;border-color:rgba(255,255,255,.08)}
+.zone-screen-v32{max-width:1180px;width:100%}
+.zone-grid-v32{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.zone-photo-card{position:relative;min-height:280px;border-radius:22px;overflow:hidden;background-size:cover;background-position:center;border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 42px rgba(0,0,0,.3);text-align:left;color:#fff;padding:0;transition:.2s ease}
+.zone-photo-card:hover{transform:translateY(-3px);border-color:#e3262e;box-shadow:0 22px 50px rgba(0,0,0,.42)}
+.zone-photo-card .zone-card-copy{position:absolute;left:26px;right:72px;bottom:24px;display:flex;flex-direction:column;gap:7px;z-index:2}
+.zone-photo-card strong{font-size:36px;line-height:1.05;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.zone-photo-card small{font-size:17px;color:#e8f0eb}
+.zone-photo-card em{display:inline-flex;width:max-content;margin-top:6px;padding:7px 11px;border-radius:999px;background:rgba(3,36,23,.72);color:#fff;font-style:normal;font-weight:800}
+.zone-photo-card .zone-capacity{color:#c9e4d4;font-weight:700}
+.zone-card-arrow{position:absolute;right:24px;bottom:24px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.7);font-size:26px;color:#fff;background:rgba(0,0,0,.18)}
+.zone-photo-card.zone-disabled{filter:grayscale(.65);opacity:.48}
+.dine-setup-shell .seat-screen-v38 .seat-card{background:#0a3927;color:#fff;border-color:rgba(255,255,255,.12)}
+.dine-setup-shell .group-zone-note,.dine-setup-shell .compact-entrance{background:rgba(255,255,255,.06);color:#d7e7de;border-color:rgba(255,255,255,.1)}
+@media(max-width:900px){.zone-grid-v32{grid-template-columns:1fr}.zone-photo-card{min-height:220px}.zone-photo-card strong{font-size:30px}}
