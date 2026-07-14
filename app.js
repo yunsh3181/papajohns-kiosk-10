@@ -787,29 +787,78 @@ function renderBase(){
   subscribeSeats();
   const z=SEAT_ZONES.find(x=>x.id===state.seatZone);
   const list=SEAT_MASTER.filter(s=>s.zone===state.seatZone).map(s=>seatInfo(s.id));
-  const entrance=state.seatZone==='outside'?`<div class="compact-entrance"><span>🚪</span><strong>파파존스 출입구</strong><small>야외석1 옆</small></div>`:'';
-  const groupNote=state.seatZone==='room'
-    ? `<div class="group-zone-note">${usedTablesInZone('room')===0?'최초 이용은 6~12명':'남은 테이블 기준 최대 '+freeTablesInZone('room')*4+'명 추가 가능'}</div>`
-    : state.seatZone==='outside'
-      ? `<div class="group-zone-note">남은 테이블 기준 최대 ${freeTablesInZone('outside')*4}명 선택 가능</div>`
-      : '';
 
-  return shell(`<section class="seat-screen seat-screen-v38"><h1 class="title">테이블을 선택해 주세요</h1><p class="sub">${z?.name||''} · ${state.partySize}명</p>${entrance}${groupNote}
-  <div class="seat-grid seat-grid-v38">${list.map(s=>{
+  const seatButton=(s,label='선택하기')=>{
     const maxCapacity=(s.zone==='bottle'&&Number(s.capacity)===4)?5:Number(s.capacity);
     const isGroupZone=['room','outside'].includes(state.seatZone);
     const capacityBlocked=!isGroupZone&&Number(state.partySize)>maxCapacity;
     const selectable=s.status==='empty'&&!capacityBlocked;
     const waitingPossible=s.status==='occupied';
+    if(selectable)return `<button class="seat-select-action" onclick="chooseSeat('${s.id}')">${isGroupZone&&Number(state.partySize)>4?'자동 배정 시작':label}</button>`;
+    if(waitingPossible)return `<button class="seat-wait-action" onclick='openWaiting(${JSON.stringify(s)})'>줄서기</button>`;
+    return `<button class="seat-select-action" disabled>${seatActionLabel(s,capacityBlocked)}</button>`;
+  };
+
+  if(state.seatZone==='outside'){
+    const cards=list.map((s,i)=>{
+      const capacityBlocked=false;
+      const statusText=seatStatusName[s.status]||s.status;
+      return `<article class="location-seat-card outside-seat-card ${s.status}" style="--seat-crop:${18+i*22}%">
+        <div class="location-seat-photo"><span class="seat-number">${i+1}</span></div>
+        <div class="location-seat-copy"><strong>${i+1}번 테이블</strong><small>최대 4인</small><em>${statusText}</em>${seatButton(s,'선택하기')}</div>
+      </article>`;
+    }).join('');
+    return shell(`<section class="seat-screen location-seat-screen">
+      <h1 class="title">야외 테이블을 선택해 주세요</h1>
+      <p class="sub">파파존스 입구에서 보틀 입구 방향으로 1번부터 4번까지 배치되어 있습니다. · 현재 ${state.partySize}명</p>
+      <div class="location-direction"><span class="pj-marker">◀ 파파존스 입구</span><span class="direction-line"></span><span class="bottle-marker">보틀 입구 ▶</span></div>
+      <div class="location-seat-grid outside-seat-grid">${cards}</div>
+      <div class="seat-map-panel outside-map-panel">
+        <div class="map-label pj">PAPA JOHN'S<small>파파존스 입구</small></div>
+        <div class="map-table-row"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+        <div class="map-label bottle">PapaBottle<small>보틀 입구</small></div>
+      </div>
+      <div class="seat-info-note">입구 표시는 위치 안내용이며 선택 가능한 테이블이 아닙니다.</div>
+    </section>`,{auto:true});
+  }
+
+  if(state.seatZone==='papa'){
+    const bar=list.find(s=>s.id==='papa-2');
+    const couple=list.find(s=>s.id==='papa-1');
+    const card=(s,type,img,capacity,desc)=>`<article class="papa-seat-card ${s.status}">
+      <img src="${img}" alt="${type}">
+      <div class="papa-seat-copy"><strong>${type}</strong><small>${capacity}</small><p>${desc}</p><em>${seatStatusName[s.status]||s.status}</em>${seatButton(s,'선택하기')}</div>
+    </article>`;
+    return shell(`<section class="seat-screen location-seat-screen papa-seat-screen">
+      <h1 class="title">파파존 좌석을 선택해 주세요</h1>
+      <p class="sub">출입구를 기준으로 왼쪽은 바테이블석, 오른쪽은 커플석입니다. · 현재 ${state.partySize}명</p>
+      <div class="papa-seat-grid">
+        ${card(bar,'바테이블석','images/seats/papa_bar.jpg','1~4인 · 최대 4인','바 형태의 테이블로 편하게 이용하세요.')}
+        <div class="papa-door-marker"><span>출입구</span><b>🚪</b><small>위치 안내</small></div>
+        ${card(couple,'커플석','images/seats/papa_couple.jpg','1~2인 추천','아늑하고 조용한 2인 전용 테이블입니다.')}
+      </div>
+      <div class="seat-map-panel papa-map-panel">
+        <div class="papa-map-seat bar"><strong>바테이블석</strong><span>▰ ▰ ▰ ▰</span></div>
+        <div class="papa-map-door"><strong>출입구</strong><span>🚪</span></div>
+        <div class="papa-map-seat couple"><strong>커플석</strong><span>◯ ─ ◯</span></div>
+      </div>
+      <div class="seat-info-note">좌석 안내도: 바테이블석 │ 출입구 │ 커플석</div>
+    </section>`,{auto:true});
+  }
+
+  const groupNote=state.seatZone==='room'
+    ? `<div class="group-zone-note">${usedTablesInZone('room')===0?'최초 이용은 6~12명':'남은 테이블 기준 최대 '+freeTablesInZone('room')*4+'명 추가 가능'}</div>`
+    : '';
+  return shell(`<section class="seat-screen seat-screen-v38"><h1 class="title">테이블을 선택해 주세요</h1><p class="sub">${z?.name||''} · ${state.partySize}명</p>${groupNote}
+  <div class="seat-grid seat-grid-v38">${list.map(s=>{
+    const maxCapacity=(s.zone==='bottle'&&Number(s.capacity)===4)?5:Number(s.capacity);
+    const isGroupZone=state.seatZone==='room';
+    const capacityBlocked=!isGroupZone&&Number(state.partySize)>maxCapacity;
+    const waitingPossible=s.status==='occupied';
     const elapsed=s.status==='occupied'?seatElapsed(s.occupiedAt):'';
     return `<article class="seat-card-v38 ${s.status} ${capacityBlocked?'capacity-blocked':''}">
-      <strong>${s.name}</strong>
-      <small>최대 ${maxCapacity}인</small>
-      <em>${capacityBlocked?'인원 초과':seatStatusName[s.status]||s.status}</em>
-      ${elapsed?`<b class="seat-elapsed">${elapsed}</b>`:''}
-      ${selectable?`<button class="seat-select-action" onclick="chooseSeat('${s.id}')">${isGroupZone&&Number(state.partySize)>4?'자동 배정 시작':'테이블 선택하기'}</button>`:
-        waitingPossible?`<button class="seat-wait-action" onclick='openWaiting(${JSON.stringify(s)})'>줄서기</button>`:
-        `<button class="seat-select-action" disabled>${seatActionLabel(s,capacityBlocked)}</button>`}
+      <strong>${s.name}</strong><small>최대 ${maxCapacity}인</small><em>${capacityBlocked?'인원 초과':seatStatusName[s.status]||s.status}</em>
+      ${elapsed?`<b class="seat-elapsed">${elapsed}</b>`:''}${seatButton(s,'테이블 선택하기')}
     </article>`;
   }).join('')}</div></section>`,{auto:true});
  }
