@@ -241,10 +241,10 @@ const SEAT_MASTER=[
  {id:'outside-2',zone:'outside',name:'야외석2',label:'Outside 2',capacity:4},
  {id:'outside-3',zone:'outside',name:'야외석3',label:'Outside 3',capacity:4},
  {id:'outside-4',zone:'outside',name:'야외석4',label:'Outside 4',capacity:4},
- {id:'bottle-1',zone:'bottle',name:'보틀1',label:'Bottle 1',capacity:2},
- {id:'bottle-2',zone:'bottle',name:'보틀2',label:'Bottle 2',capacity:4},
- {id:'bottle-3',zone:'bottle',name:'보틀3',label:'Bottle 3',capacity:4},
- {id:'bottle-4',zone:'bottle',name:'보틀4',label:'Bottle 4',capacity:2},
+ {id:'bottle-1',zone:'bottle',name:'창가석 1',label:'Annex Window 1',capacity:2},
+ {id:'bottle-2',zone:'bottle',name:'별관 2',label:'Annex 2',capacity:5},
+ {id:'bottle-3',zone:'bottle',name:'별관 3',label:'Annex 3',capacity:5},
+ {id:'bottle-4',zone:'bottle',name:'커플석',label:'Annex Couple 4',capacity:2},
  {id:'room-1',zone:'room',name:'룸테이블1',label:'Room 1',capacity:4},
  {id:'room-2',zone:'room',name:'룸테이블2',label:'Room 2',capacity:4},
  {id:'room-3',zone:'room',name:'룸테이블3',label:'Room 3',capacity:4}
@@ -819,6 +819,42 @@ function renderBase(){
         <div class="map-label bottle">PapaBottle<small>보틀 입구</small></div>
       </div>
       <div class="seat-info-note">입구 표시는 위치 안내용이며 선택 가능한 테이블이 아닙니다.</div>
+    </section>`,{auto:true});
+  }
+
+  if(state.seatZone==='bottle'){
+    const seatMeta={
+      'bottle-1':{no:1,title:'창가석 1',capacity:'최대 2인',desc:'창가에 위치한 조용한 2인석',pos:'seat-1'},
+      'bottle-2':{no:2,title:'별관 2',capacity:'최대 5인',desc:'세로형 테이블 · 모임 추천',pos:'seat-2'},
+      'bottle-3':{no:3,title:'별관 3',capacity:'최대 5인',desc:'사선 방향의 넓은 단체석',pos:'seat-3'},
+      'bottle-4':{no:4,title:'커플석',capacity:'최대 2인',desc:'장식장 바깥편에 위치한 2인석',pos:'seat-4'}
+    };
+    const hotspots=list.map(s=>{
+      const m=seatMeta[s.id];
+      const blocked=Number(state.partySize)>Number(s.capacity);
+      const selectable=s.status==='empty'&&!blocked;
+      const label=blocked?'인원 초과':seatStatusName[s.status]||s.status;
+      return `<button type="button" class="annex-seat-hotspot ${m.pos} ${s.status} ${blocked?'capacity-blocked':''}" ${selectable?`onclick="chooseSeat('${s.id}')"`:'disabled'}>
+        <span class="annex-seat-number">${m.no}</span><strong>${m.title}</strong><small>${m.capacity}</small><em>${label}</em>
+      </button>`;
+    }).join('');
+    const cards=list.map(s=>{
+      const m=seatMeta[s.id];
+      const blocked=Number(state.partySize)>Number(s.capacity);
+      return `<article class="annex-info-card ${s.status} ${blocked?'capacity-blocked':''}">
+        <span>${m.no}</span><div><strong>${m.title}</strong><small>${m.capacity}</small><p>${m.desc}</p></div>${seatButton(s,'이 좌석 선택하기')}
+      </article>`;
+    }).join('');
+    return shell(`<section class="seat-screen annex-seat-screen">
+      <h1 class="title">별관 좌석을 선택해 주세요</h1>
+      <p class="sub">실제 배치도를 확인하고 원하는 좌석을 선택해 주세요. · 현재 ${state.partySize}명</p>
+      <div class="annex-layout-wrap">
+        <div class="annex-floorplan" aria-label="별관 전체 좌석 배치도">
+          <img src="images/seats/bottle_floorplan.png" alt="별관 좌석 배치도">${hotspots}
+        </div>
+        <div class="annex-seat-list">${cards}</div>
+      </div>
+      <div class="annex-status-legend"><strong>좌석 상태</strong><span class="available">이용 가능</span><span class="selected">선택 중</span><span class="occupied">사용 중</span></div>
     </section>`,{auto:true});
   }
 
