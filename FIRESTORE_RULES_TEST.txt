@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /orders/{orderId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+    match /seats/{seatId} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+  }
+}
