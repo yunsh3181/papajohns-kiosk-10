@@ -212,22 +212,30 @@ function selectedCount(key){return Object.values(state[key]).reduce((a,b)=>a+b,0
 function includedCount(key){return Object.values(state[key]).reduce((a,b)=>a+b,0)}
 function calc(){
  const pizzaBase=basePizzaPrice(), crust=crustPrice(), topping=toppingPrice(), half=halfFee();
- let sides=sideTotal(),drinks=drinkTotal(),discount=0,total=0;
+ const sides=sideTotal(),drinks=drinkTotal();
+ let discount=0,total=0,normalTotal=0;
  if(state.promo==='happyhour'&&state.orderType==='takeout'){
+   normalTotal=pizzaBase+half+crust+topping+sides+drinks;
    total=15000+crust+topping+sides+drinks;
+   discount=Math.max(0,normalTotal-total);
  } else if(state.set){
    const setBase=state.set===2?24000:state.set===3?33000:42000;
    total=setBase+half+crust+topping+sides+drinks;
+   normalTotal=total;
  } else if(state.promo==='takeout'&&state.orderType==='takeout'&&['L','F'].includes(state.size)){
    const discountBase=pizzaBase+half+crust+topping;
    discount=discountBase*.2;
-   total=discountBase-discount+sides+drinks;
+   normalTotal=discountBase+sides+drinks;
+   total=normalTotal-discount;
  } else {
    total=pizzaBase+half+crust+topping+sides+drinks;
+   normalTotal=total;
  }
- return{pizza:pizzaBase,half,crust,topping,sides,drinks,discount,total,upupDiscount:upupDiscount()};
+ const upup=upupDiscount();
+ if(state.promo==='upup')normalTotal=total+upup;
+ const totalDiscount=Math.max(0,normalTotal-total);
+ return{pizza:pizzaBase,half,crust,topping,sides,drinks,discount,total,normalTotal,totalDiscount,upupDiscount:upup};
 }
-
 
 
 const SEAT_ZONES=[
@@ -940,7 +948,7 @@ function renderBase(){
   let list=PIZZAS.filter(p=>{if(state.dough==='hand'&&p.thinOnly)return false;if(!p.sizes.includes(priceSize))return false;if(isHalf()&&halfBlocked.includes(p.id))return false;if(isHalf()&&state.halfStage==='right'&&p.id===state.pizzaLeft)return false;if(isHalf()&&state.halfStage==='right'&&state.pizzaLeft==='favorite'&&p.id!=='six')return false;if(isHalf()&&state.halfStage==='right'&&state.pizzaLeft==='six'&&p.id!=='favorite')return false;if(isHalf()&&state.halfStage==='right'&&p.id==='favorite'&&state.pizzaLeft!=='six')return false;if(isHalf()&&state.halfStage==='right'&&p.id==='six'&&state.pizzaLeft!=='favorite')return false;return state.category==='ALL'||p.cat===state.category});
   const leftPizza=isHalf()&&state.pizzaLeft?PIZZAS.find(p=>p.id===state.pizzaLeft):null;
   const rightPizza=isHalf()&&state.pizzaRight?PIZZAS.find(p=>p.id===state.pizzaRight):null;
-  const halfPreview=isHalf()?`<section class="half-preview ${state.halfStage==='confirm'?'complete':''}"><div class="half-pizza-visual ${state.halfStage==='confirm'?'large':''}"><div class="half-slice left" style="background-image:url('${leftPizza?leftPizza.img:''}')">${leftPizza?'':'<span>왼쪽</span>'}</div><div class="half-slice right" style="background-image:url('${rightPizza?rightPizza.img:''}')">${rightPizza?'':'<span>오른쪽</span>'}</div></div><div class="half-preview-copy"><strong>${leftPizza?leftPizza.name:'왼쪽 피자 선택'} + ${rightPizza?rightPizza.name:'오른쪽 피자 선택'}</strong><span>${state.halfStage==='left'?'먼저 왼쪽 피자를 선택해 주세요.':state.halfStage==='right'?'왼쪽에 선택한 '+leftPizza.name+'는 목록에서 숨겨졌습니다. 다른 피자를 선택해 주세요.':'하프앤하프 조합이 완성되었습니다. 아래 내용을 확인해 주세요.'}</span><em>하프앤하프 추가금 +1,000원</em></div></section>`:'';
+  const halfPreview=isHalf()?`<section class="half-preview ${state.halfStage==='confirm'?'complete':''}"><div class="half-pizza-visual ${state.halfStage==='confirm'?'large':''}"><div class="half-slice left">${leftPizza?`<img src="${leftPizza.img}" alt="${leftPizza.name}">`:'<span>왼쪽</span>'}</div><div class="half-slice right">${rightPizza?`<img src="${rightPizza.img}" alt="${rightPizza.name}">`:'<span>오른쪽</span>'}</div></div><div class="half-preview-copy"><strong>${leftPizza?leftPizza.name:'왼쪽 피자 선택'} + ${rightPizza?rightPizza.name:'오른쪽 피자 선택'}</strong><span>${state.halfStage==='left'?'먼저 왼쪽 피자를 선택해 주세요.':state.halfStage==='right'?'왼쪽에 선택한 '+leftPizza.name+'는 목록에서 숨겨졌습니다. 다른 피자를 선택해 주세요.':'하프앤하프 조합이 완성되었습니다. 아래 내용을 확인해 주세요.'}</span><em>하프앤하프 추가금 +1,000원</em></div></section>`:'';
   if(isHalf()&&state.halfStage==='confirm')return shell(`<section class="half-confirm-screen"><h1 class="title">하프앤하프 조합을 확인해 주세요</h1>${halfPreview}<div class="half-confirm-actions"><button class="btn secondary big-action" onclick="changeHalfSelection()">다시 선택</button><button class="btn primary big-action" onclick="confirmHalfSelection()">이 조합으로 확인</button></div></section>`,{auto:true});
   const guide=isHalf()?`<p class="sub">${state.halfStage==='left'?'왼쪽':'오른쪽'} 피자를 선택해 주세요.</p>`:state.set===2?'<p class="sub">2인 세트는 레귤러 사이즈 판매 메뉴만 표시됩니다.</p>':'';
   const selectedId=isHalf()?(state.halfStage==='left'?state.pizzaLeft:state.pizzaRight):state.pizza;
@@ -960,18 +968,42 @@ function renderBase(){
  }
  if(state.step==='drink'){
   const includedList=setIncludedDrinks();
-  const allFamilies=drinkFamilies(DRINKS);
-  const includedFamilies=drinkFamilies(includedList);
   const setRule=state.set===2
-   ? '2인 세트는 각 음료의 500mL만 선택할 수 있습니다.'
-   : '3·4인 세트는 코카콜라·코카콜라 제로 1.25L, 스프라이트·스프라이트 제로 1.5L 중 선택할 수 있습니다.';
-  return shell(`<section class="drink-screen-v39"><div class="drink-screen-head"><div><h1 class="title">음료를 선택해 주세요</h1><p class="sub">세트에 포함된 음료 1개를 선택하세요.</p></div>${state.set?'<div class="drink-info">ⓘ 세트 음료 변경 시 추가금이 발생할 수 있습니다.</div>':''}</div>
-  ${state.set?`<section class="menu-section included-section drink-layout-section"><div class="section-heading"><div><span class="section-badge">세트 포함</span><h2>포함 음료 선택</h2></div><strong>${includedCount('includedDrinks')} / 1</strong></div><p class="set-drink-rule">${setRule}</p><div class="drink-family-grid">${includedFamilies.map(f=>drinkFamilyCard(f.items,'includedDrinks',true)).join('')}</div></section>`:''}
-  <section class="menu-section extra-section drink-layout-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>음료 추가 주문</h2></div><span>원하는 음료와 용량을 선택하세요</span></div><div class="drink-family-grid">${allFamilies.map(f=>drinkFamilyCard(f.items,'drinks',false)).join('')}</div></section></section>`,{nextDisabled:state.set&&includedCount('includedDrinks')!==1});
+   ? '2인 세트는 500mL 음료 1개를 선택해 주세요.'
+   : '3·4인 세트는 대용량 음료 1개를 선택해 주세요.';
+  return shell(`<section class="drink-screen-v38"><div class="drink-screen-head"><div><h1 class="title">음료를 선택해 주세요</h1><p class="sub">원하는 음료를 카드에서 선택하고 − / ＋ 버튼으로 수량을 조절하세요.</p></div></div>
+  ${state.set?`<section class="menu-section included-section drink-layout-section"><div class="section-heading"><div><span class="section-badge">세트 포함</span><h2>포함 음료 선택</h2></div><strong>${includedCount('includedDrinks')} / 1</strong></div><p class="set-drink-rule">${setRule}</p><div class="grid four drink-grid-v38">${includedList.map(d=>drinkCard(d,'includedDrinks',true)).join('')}</div></section>`:''}
+  <section class="menu-section extra-section drink-layout-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>음료 추가 주문</h2></div><span>수량 버튼으로 여러 개 주문할 수 있습니다</span></div><div class="grid four drink-grid-v38">${DRINKS.map(d=>drinkCard(d,'drinks',false)).join('')}</div></section></section>`,{nextDisabled:state.set&&includedCount('includedDrinks')!==1});
  }
  if(state.step==='review'){
   const c=calc();
-  return shell(`<h1 class="title">주문 내용을 확인해 주세요</h1><div class="summary"><div class="summary-row"><b>이용방법</b><span>${state.orderType==='takeout'?'포장':'먹고가기'}</span></div>${state.orderType==='dinein'?`<div class="summary-row"><b>연락처</b><span>${formatPhone(state.phone)}</span></div>`:''}${state.orderType==='takeout'?`<div class="summary-row"><b>픽업 방식</b><span>${state.pickupMode==='now'?'바로 주문 (15~20분)':'예약 주문'}</span></div><div class="summary-row"><b>픽업 예정</b><span>오늘 ${state.pickupTime||'-'}</span></div><div class="summary-row"><b>연락처</b><span>${formatPhone(state.phone)}</span></div>`:`<div class="summary-row"><b>이용 인원</b><span>${state.partySize||'-'}명</span></div>`}${state.orderType==='dinein'?`<div class="summary-row"><b>선택 좌석</b><span>${state.seatName||'-'} · 최대 ${state.seatCapacity||'-'}인</span></div>`:''}<div class="summary-row"><b>혜택</b><span>${state.set?state.set+'인 세트':state.promo==='takeout'?'포장 20%':state.promo==='happyhour'?'해피아워 레귤러 15,000원':state.promo==='upup'?'UP & UP':'일반 주문'}</span></div><div class="summary-row"><b>피자</b><span>${pizzaDisplayName()}${isHalf()?' (하프앤하프)':''} · ${state.dough==='thin'?'씬도우':'수타도우'} · ${state.promo==='upup'?'라지 주문 → 패밀리 업그레이드':sizeLabel(state.size)} · ${state.crust}</span></div>${isHalf()?`<div class="summary-row"><b>하프앤하프 추가금</b><span>${money(1000)}</span></div>`:''}<div class="summary-row"><b>추가 토핑</b><span>${Object.entries(state.toppings).filter(x=>x[1]).map(([id,q])=>TOPPINGS.find(t=>t.id===id).name+' ×'+q).join(', ')||'없음'}</span></div>${state.set?`<div class="summary-row"><b>세트 포함 사이드</b><span>${names(state.includedSides,SIDES)}</span></div><div class="summary-row"><b>세트 포함 음료</b><span>${names(state.includedDrinks,DRINKS)}</span></div>`:''}<div class="summary-row"><b>${state.set?'추가 사이드':'사이드'}</b><span>${names(state.sides,SIDES)}</span></div><div class="summary-row"><b>${state.set?'추가 음료':'음료'}</b><span>${names(state.drinks,DRINKS)}</span></div>${state.set?`<div class="summary-row"><b>세트 기본금액</b><span>${money(state.set===2?24000:state.set===3?33000:42000)}</span></div><div class="summary-row"><b>크러스트 추가금</b><span>${money(crustPrice())}</span></div><div class="summary-row"><b>토핑 추가금</b><span>${money(toppingPrice())}</span></div><div class="summary-row"><b>추가 사이드</b><span>${money(c.sides)}</span></div><div class="summary-row"><b>추가 음료</b><span>${money(c.drinks)}</span></div>`:''}${!state.set?`<div class="summary-row"><b>피자 금액</b><span>${money(c.pizza)}</span></div><div class="summary-row"><b>크러스트 추가금</b><span>${money(c.crust)}</span></div><div class="summary-row"><b>토핑 추가금</b><span>${money(c.topping)}</span></div><div class="summary-row"><b>사이드 금액</b><span>${money(c.sides)}</span></div><div class="summary-row"><b>음료 금액</b><span>${money(c.drinks)}</span></div>`:''}${c.discount?`<div class="summary-row discount"><b>포장 할인</b><span>-${money(c.discount)}</span></div>`:''}${state.promo==='upup'?`<div class="summary-row"><b>라지 피자 정상가</b><span>${money(basePizzaPrice())}</span></div><div class="summary-row discount"><b>UP & UP 할인</b><span>-${money(c.upupDiscount)}</span></div><div class="summary-row"><b>무료 혜택</b><span>패밀리 사이즈 업그레이드 + ${state.crust==='오리지널'?'오리지널 크러스트':'크러스트 업그레이드'}</span></div>`:''}<div class="summary-row"><b style="font-size:24px">총 결제금액</b><strong class="price" style="font-size:28px">${money(c.total)}</strong></div></div><div class="notice" style="margin-top:15px">현재 버전은 주문 흐름·가격 계산 확인용입니다. 실제 카드 승인, POS, 영수증 출력은 연결되어 있지 않습니다.</div>`);
+  const moneyRow=(label,value,cls='')=>Number(value)>0?`<div class="summary-row ${cls}"><b>${label}</b><span>${cls.includes('discount')?'-':''}${money(value)}</span></div>`:'';
+  const toppingNames=Object.entries(state.toppings).filter(([,q])=>q).map(([id,q])=>`${TOPPINGS.find(t=>t.id===id)?.name||id} ×${q}`).join(', ');
+  const sideNames=names(state.sides,SIDES);
+  const drinkNames=names(state.drinks,DRINKS);
+  const discountLabel=state.promo==='takeout'?'포장 할인':state.promo==='happyhour'?'해피아워 할인':state.promo==='upup'?'UP & UP 할인':'할인 금액';
+  return shell(`<h1 class="title">주문 내용을 확인해 주세요</h1><div class="summary">
+  <div class="summary-row"><b>이용방법</b><span>${state.orderType==='takeout'?'포장':'먹고가기'}</span></div>
+  ${state.orderType==='takeout'?`<div class="summary-row"><b>픽업 예정</b><span>오늘 ${state.pickupTime||'-'}</span></div>`:`<div class="summary-row"><b>이용 인원</b><span>${state.partySize||'-'}명</span></div><div class="summary-row"><b>선택 좌석</b><span>${state.seatName||'-'}</span></div>`}
+  <div class="summary-row"><b>연락처</b><span>${formatPhone(state.phone)}</span></div>
+  <div class="summary-row"><b>혜택</b><span>${state.set?state.set+'인 세트':state.promo==='takeout'?'포장 20%':state.promo==='happyhour'?'해피아워':state.promo==='upup'?'UP & UP':'일반 주문'}</span></div>
+  <div class="summary-row"><b>피자 구성</b><span>${pizzaDisplayName()}${isHalf()?' (하프앤하프)':''} · ${state.dough==='thin'?'씬도우':'수타도우'} · ${state.promo==='upup'?'L→F 업그레이드':sizeLabel(state.size)} · ${state.crust}</span></div>
+  ${toppingNames?`<div class="summary-row"><b>추가 토핑</b><span>${toppingNames}</span></div>`:''}
+  ${state.set&&includedCount('includedSides')?`<div class="summary-row"><b>세트 포함 사이드</b><span>${names(state.includedSides,SIDES)}</span></div>`:''}
+  ${state.set&&includedCount('includedDrinks')?`<div class="summary-row"><b>세트 포함 음료</b><span>${names(state.includedDrinks,DRINKS)}</span></div>`:''}
+  ${sideTotal()>0?`<div class="summary-row"><b>${state.set?'추가 사이드':'사이드 메뉴'}</b><span>${sideNames}</span></div>`:''}
+  ${drinkTotal()>0?`<div class="summary-row"><b>${state.set?'추가 음료':'음료'}</b><span>${drinkNames}</span></div>`:''}
+  <div class="summary-price-section">
+   ${moneyRow(state.set?'세트 기본금액':'피자 금액',state.set?(state.set===2?24000:state.set===3?33000:42000):c.pizza)}
+   ${moneyRow('크러스트 추가금',c.crust)}
+   ${moneyRow('하프앤하프 추가금',c.half)}
+   ${moneyRow('토핑 추가금',c.topping)}
+   ${moneyRow('사이드 메뉴',c.sides)}
+   ${moneyRow('음료',c.drinks)}
+   ${moneyRow(discountLabel,c.totalDiscount,'discount')}
+   <div class="summary-row normal-total"><b>정상 금액</b><strong>${money(c.normalTotal)}</strong></div>
+   <div class="summary-row payment-total"><b>결제 금액</b><strong>${money(c.total)}</strong></div>
+  </div></div><div class="notice" style="margin-top:15px">주문 내용을 확인한 뒤 장바구니에 담아 주세요.</div>`);
  }
  if(state.step==='cart'){
   return shell(`<section class="cart-screen"><h1 class="title">장바구니</h1><p class="sub">여러 세트와 일반 메뉴를 함께 주문할 수 있습니다.</p>${state.cart.length?`<div class="cart-list">${state.cart.map((item,i)=>`<article class="cart-item">${itemSummary(item)}<div class="cart-item-side"><strong>${money(item.total*item.qty)}</strong><div class="qty cart-qty"><button onclick="cartQty(${i},-1)">−</button><span>${item.qty}</span><button onclick="cartQty(${i},1)">＋</button></div><button class="cart-remove" onclick="removeCartItem(${i})">삭제</button></div></article>`).join('')}</div><div class="cart-total-box"><span>총 결제금액</span><strong>${money(cartTotal())}</strong></div><div class="cart-actions"><button class="btn secondary big-action" onclick="addMoreMenu()">＋ 다른 메뉴 추가</button><button class="btn primary big-action" onclick="checkoutCart()">주문확정</button></div>`:`<div class="empty-cart">장바구니가 비어 있습니다.<button class="btn primary" onclick="addMoreMenu()">메뉴 담기</button></div>`}</section>`);

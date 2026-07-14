@@ -2678,3 +2678,86 @@ html,body{
  .base-section{padding:15px}.base-choice-card{min-height:105px}.base-choice-card strong{font-size:19px}
  .drink-size-stepper{padding:11px}.drink-stepper-controls button{width:36px;height:36px}
 }
+
+/* =========================================================
+   v40.16 주문 검증 · 사이드 가독성 · 음료 복구 · 금액 요약
+   2026-07-14
+   ========================================================= */
+
+/* 일반 주문 사이드: 다크 화면에서도 음식 사진은 밝고 선명하게 */
+.dark-app-shell .side-grid .card,
+.dark-app-shell .compact-product-grid .card{
+  background:#18231d!important;
+  border-color:#35483e!important;
+}
+.dark-app-shell .side-grid .card img,
+.dark-app-shell .compact-product-grid .card img{
+  background:#f7f3ea!important;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+  opacity:1!important;
+  object-fit:contain!important;
+  padding:8px;
+}
+.dark-app-shell .side-grid .card h3,
+.dark-app-shell .compact-product-grid .card h3{color:#fff!important}
+.dark-app-shell .side-grid .card p,
+.dark-app-shell .compact-product-grid .card p{color:#dce7e0!important}
+
+/* 음료 선택: 이전 카드형 배치 복구 */
+.drink-grid-v38{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important}
+.drink-grid-v38 .drink-product-card{
+  min-height:320px;
+  border-radius:20px;
+  background:#fff!important;
+  color:#171717!important;
+  border:2px solid #d9d9d9;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+}
+.drink-grid-v38 .drink-product-card img{
+  width:100%;height:165px;object-fit:contain;background:#fff!important;
+  filter:none!important;mix-blend-mode:normal!important;
+}
+.drink-grid-v38 .drink-product-card strong{color:#171717!important;font-size:19px;margin-top:8px;text-align:center}
+.drink-grid-v38 .drink-product-card small{color:#666!important}
+.drink-grid-v38 .drink-product-card em{color:#c8102e!important;font-style:normal;font-weight:900;margin-top:6px}
+.drink-grid-v38 .drink-product-card .qty{margin-top:auto}
+.drink-grid-v38 .drink-product-card .qty button{background:#ececec;color:#111}
+.drink-grid-v38 .drink-product-card .qty span{color:#111;font-weight:900;min-width:24px;text-align:center}
+@media(max-width:1050px){.drink-grid-v38{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){
+ .drink-grid-v38{grid-template-columns:1fr!important}
+ .drink-grid-v38 .drink-product-card{min-height:180px;display:grid;grid-template-columns:110px 1fr;grid-template-rows:auto auto auto auto;column-gap:14px;text-align:left}
+ .drink-grid-v38 .drink-product-card img{grid-row:1/5;width:110px;height:140px}
+ .drink-grid-v38 .drink-product-card .qty{margin-top:8px}
+}
+
+/* 하프앤하프 조합 이미지: 실제 좌·우 이미지를 원형 안에서 반씩 표시 */
+.half-pizza-visual{position:relative;display:flex;overflow:hidden;background:#202923!important}
+.half-slice{position:relative;width:50%;height:100%;overflow:hidden;background:#202923!important}
+.half-slice img{
+  position:absolute;top:0;width:200%;height:100%;object-fit:cover;max-width:none!important;
+  background:#202923!important;filter:none!important;mix-blend-mode:normal!important;
+}
+.half-slice.left img{left:0}
+.half-slice.right img{right:0}
+.half-slice.left{border-right:2px solid rgba(255,255,255,.85)}
+
+/* 주문 금액 요약 */
+.summary-price-section{margin-top:18px;border-top:2px solid rgba(255,255,255,.14);padding-top:8px}
+.summary-row.normal-total{margin-top:8px;border-top:1px solid rgba(255,255,255,.18);font-size:19px}
+.summary-row.normal-total strong{color:#fff!important;font-size:21px}
+.summary-row.payment-total{
+  margin-top:8px;padding:18px 16px!important;border:0!important;border-radius:14px;
+  background:#0b5d39!important;color:#fff!important;font-size:22px;
+}
+.summary-row.payment-total strong{font-size:30px!important;color:#fff!important}
+.summary-row.discount span{color:#ff7f8b!important;font-weight:950}
+
+/* 전화번호는 숫자 11자리일 때만 활성화 */
+.phone-confirm-btn:disabled{pointer-events:none!important}
+.phone-confirm-btn:not(:disabled){background:#d71920!important;color:#fff!important;opacity:1!important}
