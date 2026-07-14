@@ -2377,3 +2377,135 @@ html,body{
   .set-select-v403 .set-card strong{font-size:25px!important}
   .set-select-v403 .set-copy{font-size:14px!important}
 }
+
+/* =========================================================
+   PAPA OS v40.13 — dark UI readability fixes
+   2026-07-14
+   ========================================================= */
+
+/* 피자 구성 카드: 다크 배경에서 제목/설명 확실히 표시 */
+.dark-app-shell .topping-choice-card,
+.dark-app-shell .topping-choice-card.add,
+.dark-app-shell .topping-choice-card.skip{
+  background:linear-gradient(155deg,#122b20 0%,#091710 100%)!important;
+  border-color:rgba(87,190,128,.38)!important;
+  color:#fff!important;
+}
+.dark-app-shell .topping-choice-card strong{
+  color:#ffffff!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.45)!important;
+}
+.dark-app-shell .topping-choice-card span:last-child{
+  color:#dce9e1!important;
+}
+.dark-app-shell .topping-choice-card .choice-icon{
+  color:#fff!important;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));
+}
+
+/* 좌측 진행 인디케이터: 현재 단계/완료/대기 글자 대비 개선 */
+.dark-app-shell .order-sidebar .sidebar-stages{
+  background:#0b1f17!important;
+  color:#e9f4ed!important;
+  border:1px solid rgba(94,190,134,.25)!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage{
+  color:#d9e8df!important;
+  border-bottom-color:rgba(255,255,255,.09)!important;
+  background:#0b1f17!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage b{
+  color:inherit!important;
+  font-weight:900!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage span{
+  color:#d8e6dd!important;
+  border-color:rgba(255,255,255,.32)!important;
+  background:#132a20!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage.done{
+  color:#bfe7cf!important;
+  background:#0d291d!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage.done span{
+  color:#fff!important;
+  background:#0c7a48!important;
+  border-color:#0c7a48!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage.active{
+  color:#fff!important;
+  background:#d71920!important;
+  box-shadow:inset 4px 0 0 #fff,0 5px 16px rgba(215,25,32,.28)!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage.active b,
+.dark-app-shell .order-sidebar .sidebar-stage.active em{
+  color:#fff!important;
+}
+.dark-app-shell .order-sidebar .sidebar-stage.active span{
+  color:#d71920!important;
+  background:#fff!important;
+  border-color:#fff!important;
+}
+
+/* 상단 선택 인디케이터도 흰색 텍스트 유지 */
+.dark-app-shell .selection-track{
+  background:#0b2017!important;
+  border-color:rgba(86,177,124,.35)!important;
+}
+.dark-app-shell .selection-chip{
+  background:#10291e!important;
+  border-color:rgba(86,177,124,.3)!important;
+}
+.dark-app-shell .selection-chip small{color:#a9c1b2!important}
+.dark-app-shell .selection-chip strong{color:#fff!important}
+.dark-app-shell .selection-arrow{color:#8fb39d!important}
+
+/* 전화번호 선택 버튼: 파파존스 레드 */
+.dark-app-shell .number-pad .phone-confirm-btn,
+.dark-app-shell .phone-confirm-btn{
+  background:#d71920!important;
+  color:#fff!important;
+  border-color:#ff6c72!important;
+  box-shadow:0 9px 20px rgba(215,25,32,.34)!important;
+  font-weight:950!important;
+}
+.dark-app-shell .number-pad .phone-confirm-btn:hover,
+.dark-app-shell .number-pad .phone-confirm-btn:active{
+  background:#b71319!important;
+}
+.dark-app-shell .number-pad .phone-confirm-btn:disabled,
+.dark-app-shell .phone-confirm-btn:disabled{
+  background:#4b4f4d!important;
+  color:#aeb4b0!important;
+  border-color:#626865!important;
+  box-shadow:none!important;
+  opacity:.8!important;
+}
+
+/* 크러스트 카드: 오리지널/골드링/치즈롤 제목·설명·가격 가독성 */
+.dark-app-shell .crust-image-card .crust-card-body{
+  background:linear-gradient(180deg,#11281e 0%,#091710 100%)!important;
+}
+.dark-app-shell .crust-image-card .crust-card-body strong{
+  color:#fff!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.45)!important;
+}
+.dark-app-shell .crust-image-card .crust-card-body>span{
+  color:#d5e5db!important;
+}
+.dark-app-shell .crust-image-card .crust-card-body em{
+  color:#fff!important;
+  background:#176b43!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+}
+.dark-app-shell .crust-v40 .crust-image-card:nth-child(2) .crust-card-body em{
+  background:#a97800!important;
+}
+.dark-app-shell .crust-v40 .crust-image-card:nth-child(3) .crust-card-body em{
+  background:#d71920!important;
+}
+.dark-app-shell .crust-image-card.selected{
+  border-color:#47c57b!important;
+  box-shadow:0 0 0 4px rgba(71,197,123,.18),0 18px 42px rgba(0,0,0,.38)!important;
+  transform:translateY(-2px);
+}
