@@ -37,7 +37,7 @@ const customSoundName=document.getElementById('customSoundName');
 let orders=[];
 let activeFilter='active';
 let initialLoad=true;
-let soundEnabled=false;
+let soundEnabled=localStorage.getItem('pjAdminSoundEnabled')!=='false';
 let audioContext=null;
 let customAudioUrl=null;
 let settings={preset:'papa',volume:1,voice:true};
@@ -68,6 +68,17 @@ async function setStatus(id,status){
  try{const order=orders.find(o=>o.id===id);await db.collection('orders').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(status!=='payment_pending')setTimeout(()=>{if(hasUnacceptedOrders())startNewOrderRepeat();else stopNewOrderRepeat()},300);if(status==='ready'&&order?.seat?.id){await db.collection('seats').doc(order.seat.id).set({status:'cleaning',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}if(status==='ready'&&order){playPreset('cafe');speak(`${order.customerNumber||order.orderNo} 고객님 주문 조리가 완료되었습니다.`)}}catch(error){alert('상태 변경 실패: '+error.message)}
 }
 function ensureAudio(){audioContext=audioContext||new (window.AudioContext||window.webkitAudioContext)();return audioContext.resume()}
+
+async function unlockAdminAudio(){
+ try{
+  if(!soundEnabled)return;
+  await ensureAudio();
+  localStorage.setItem('pjAdminSoundEnabled','true');
+  soundButton.textContent='🔔 알림음 켜짐';
+ }catch(e){console.warn('관리자 알림음 잠금 해제 실패',e)}
+}
+document.addEventListener('pointerdown',unlockAdminAudio,{once:true,passive:true});
+document.addEventListener('keydown',unlockAdminAudio,{once:true});
 function tone(freq,start,duration,gain=.36,type='sine'){const now=audioContext.currentTime+start,osc=audioContext.createOscillator(),g=audioContext.createGain();osc.frequency.value=freq;osc.type=type;g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(Math.max(.0001,gain*settings.volume),now+.015);g.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(g);g.connect(audioContext.destination);osc.start(now);osc.stop(now+duration+.03)}
 async function playPreset(forcePreset){
  if(!soundEnabled)return;
@@ -96,12 +107,13 @@ function startNewOrderRepeat(){
  },5000);
 }
 
-async function notifyNewOrders(added){if(!added.length)return;await playPreset();setTimeout(()=>speak(added.length===1?'새 주문이 확정되었습니다. 결제를 확인해 주세요.':`결제대기 주문이 ${added.length}건 있습니다.`),settings.preset==='voice'?0:550);added.forEach(showToast);startNewOrderRepeat()}
+async function notifyNewOrders(added){if(!added.length)return;added.forEach(showToast);document.title=`(${added.length}) 새 결제대기 주문 · 관리자`;try{if(soundEnabled){await ensureAudio();await playPreset();setTimeout(()=>speak(added.length===1?'새 주문이 확정되었습니다. 결제를 확인해 주세요.':`결제대기 주문이 ${added.length}건 있습니다.`),settings.preset==='voice'?0:550);startNewOrderRepeat()}}catch(e){console.warn('새 주문 알림음 재생 실패',e);soundButton.classList.add('attention');soundButton.textContent='🔔 화면을 눌러 알림음 활성화'}}
 function showToast(order){document.getElementById('toastText').textContent=`#${order.orderNo} · ${money(order.total)}`;const toast=document.getElementById('toast');toast.hidden=false;toast.classList.add('show');setTimeout(()=>{toast.classList.remove('show');toast.hidden=true},5000)}
 function callCustomer(orderNo){playPreset('cafe');setTimeout(()=>speak(`${orderNo}번 고객님, 주문이 준비되었습니다.`),420)}
 window.callCustomer=callCustomer;window.setStatus=setStatus;
 
-soundButton.addEventListener('click',async()=>{soundEnabled=!soundEnabled;if(soundEnabled){await ensureAudio();soundButton.textContent='🔔 알림음 켜짐';await playPreset();setTimeout(()=>speak('알림음이 켜졌습니다.'),450);if(hasUnacceptedOrders())startNewOrderRepeat()}else{stopNewOrderRepeat();window.speechSynthesis?.cancel();soundButton.textContent='🔕 알림음 꺼짐'}});
+soundButton.textContent=soundEnabled?'🔔 알림음 켜짐':'🔕 알림음 꺼짐';
+soundButton.addEventListener('click',async()=>{soundEnabled=!soundEnabled;localStorage.setItem('pjAdminSoundEnabled',String(soundEnabled));if(soundEnabled){await ensureAudio();soundButton.textContent='🔔 알림음 켜짐';await playPreset();setTimeout(()=>speak('알림음이 켜졌습니다.'),450);if(hasUnacceptedOrders())startNewOrderRepeat()}else{stopNewOrderRepeat();window.speechSynthesis?.cancel();soundButton.textContent='🔕 알림음 꺼짐'}});
 soundSettingsButton.addEventListener('click',()=>{settingsModal.hidden=false});
 document.getElementById('closeSoundSettings').addEventListener('click',()=>settingsModal.hidden=true);
 settingsModal.addEventListener('click',e=>{if(e.target===settingsModal)settingsModal.hidden=true});
