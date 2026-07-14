@@ -19,6 +19,11 @@ const IMMEDIATE_MAX=20;
 const HOLD_WARN_MS=10000;
 const HOLD_RELEASE_MS=20000;
 let holdWarnTimer=null,holdReleaseTimer=null;
+function isMobileMode(){return window.matchMedia&&window.matchMedia('(max-width: 768px)').matches;}
+function renderKeepingScroll(){
+ const y=window.scrollY; const main=document.querySelector('.main'); const my=main?.scrollTop||0;
+ render(); requestAnimationFrame(()=>{window.scrollTo(0,y);const m=document.querySelector('.main');if(m)m.scrollTop=my;});
+}
 let doneCountdownTimer=null;
 let doneCountdownValue=5;
 
@@ -557,22 +562,33 @@ function renderWaitingPhoneOnly(){
 }
 async function submitWaiting(){
  const digits=String(state.waitingPhone||'').replace(/\D/g,'');
- if(digits.length<9)return alert('전화번호를 정확히 입력해 주세요.');
- const seat=seatInfo(state.waitingSeatId);
- const queueSnap=await db.collection('waitlist').where('seatId','==',state.waitingSeatId).where('status','==','waiting').get();
- const queueNo=queueSnap.size+1;
- await db.collection('waitlist').add({
-   seatId:state.waitingSeatId,
-   seatName:state.waitingSeatName,
-   zone:seat.zone,
-   partySize:Number(state.waitingPartySize||1),
-   phone:digits,
-   phoneMasked:`***-${digits.slice(-4)}`,
-   queueNo,
-   status:'waiting',
-   createdAt:firebase.firestore.FieldValue.serverTimestamp()
- });
- state.step='waitingDone';state.waitingQueueNo=queueNo;render();
+ if(digits.length!==11)return;
+ const button=document.querySelector('.waiting-confirm-btn');
+ if(button){button.disabled=true;button.textContent='등록 중...';}
+ try{
+   const seat=seatInfo(state.waitingSeatId);
+   const queueSnap=await db.collection('waitlist').where('seatId','==',state.waitingSeatId).get();
+   const activeDocs=queueSnap.docs.filter(doc=>(doc.data().status||'waiting')==='waiting');
+   const queueNo=activeDocs.length+1;
+   await db.collection('waitlist').add({
+     seatId:state.waitingSeatId,
+     seatName:state.waitingSeatName,
+     zone:seat.zone,
+     partySize:Number(state.waitingPartySize||1),
+     phone:digits,
+     phoneMasked:`***-${digits.slice(-4)}`,
+     queueNo,
+     status:'waiting',
+     createdAt:firebase.firestore.FieldValue.serverTimestamp()
+   });
+   state.waitingQueueNo=queueNo;
+   state.step='waitingDone';
+   render();
+ }catch(error){
+   console.error('대기 등록 실패:',error);
+   alert('대기 등록에 실패했습니다. 네트워크 연결을 확인해 주세요.');
+   if(button){button.disabled=false;button.textContent='대기등록';}
+ }
 }
 
 function selectionIndicator(){
@@ -693,7 +709,7 @@ function shell(content,opts={}){
  const action=opts.auto
   ? '<span class="auto-guide">메뉴를 터치하면 자동으로 이동합니다</span>'
   : `<button class="btn primary footer-next" ${opts.nextDisabled?'disabled':''} onclick="next()">${state.step==='review'?'장바구니 담기':'선택 완료 →'}</button>`;
- const footer=showFooter?`<footer class="footer v401-footer"><div class="total">현재 금액<strong>${money(c.total)}</strong></div>${action}</footer>`:'';
+ const footer=showFooter?`<footer class="footer v401-footer"><div class="mobile-footer-nav"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><div class="total">현재 금액<strong>${money(c.total)}</strong></div>${action}</footer>`:'';
  const preFlow=['type','pickup','pickupTime'].includes(state.step) && state.orderType==='takeout';
  const dineFlow=['partySize','seatZone','seatSelect'].includes(state.step) && state.orderType==='dinein';
  const indicator=(preFlow||dineFlow)?'':(!['home','type','done','cart'].includes(state.step)?selectionIndicator():'');
@@ -736,13 +752,20 @@ function startHomeHappyHour(){
 }
 function startHomeTakeoutDiscount(){state.orderType='takeout';state.set=null;state.homePromoShortcut='takeout';state.pickupMode=null;state.pickupHour=null;state.pickupMinute=null;state.pickupTime=null;state.step='pickup';render();}
 function mobileHomeUI(){
- const d={store:'파파존스 판교2테크노밸리점',headline:'오늘도 갓 구운 피자를\n가장 맛있게 즐겨보세요.',take:'포장 주문',takeDesc:'바로주문 · 예약주문 · 해피아워',takeBtn:'포장 주문 시작하기 →',dine:'먹고가기',dineDesc:'인원 선택 · 좌석 선택 · 세트 주문',dineBtn:'매장 주문 시작하기 →',event:'이벤트 / 혜택',menu:'메뉴 보기',coupon:'쿠폰 사용',storeInfo:'매장 안내',review:'리뷰 이벤트'};
- return `<div class="mobile-home-ui"><div class="mobile-home-top"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><div class="mobile-korean-only">한국어</div></div><div class="mobile-home-copy"><span>${d.store}</span><h1>${d.headline.replace('\n','<br>')}</h1><p>Better Ingredients. Better Pizza.</p></div><div class="mobile-order-cards"><button class="mobile-takeout" onclick="selectOrderType('takeout')"><small>TAKE OUT</small><strong>${d.take}</strong><span>${d.takeDesc}</span><em>${d.takeBtn}</em></button><button class="mobile-dinein" onclick="selectOrderType('dinein')"><small>DINE IN</small><strong>${d.dine}</strong><span>${d.dineDesc}</span><em>${d.dineBtn}</em></button></div><div class="mobile-home-links"><button onclick="showHomeInfo('event')">${d.event}</button><button onclick="showHomeInfo('menu')">${d.menu}</button><button onclick="showHomeInfo('coupon')">${d.coupon}</button><button onclick="showHomeInfo('store')">${d.storeInfo}</button><button onclick="showHomeInfo('review')">${d.review}</button></div></div>`;
+ return `<main class="mobile-home-ui mobile-home-text-only">
+   <div class="mobile-home-top"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><div class="mobile-korean-only">한국어</div></div>
+   <div class="mobile-home-copy"><span>파파존스 판교2테크노밸리점</span><h1>주문 방법을 선택해 주세요</h1><p>Better Ingredients. Better Pizza.</p></div>
+   <div class="mobile-order-cards">
+     <button class="mobile-dinein" onclick="selectOrderType('dinein')"><small>DINE IN</small><strong>먹고가기</strong><span>매장에서 바로 즐기기</span></button>
+     <button class="mobile-takeout" onclick="selectOrderType('takeout')"><small>TAKE OUT</small><strong>포장하기</strong><span>바로 주문 또는 예약 주문</span></button>
+   </div>
+ </main>`;
 }
 function toggleMobileLanguage(){}
 
 function renderBase(){
  if(state.step==='home'){
+ if(isMobileMode()){app.innerHTML=mobileHomeUI();return;}
  app.innerHTML=`<main class="papa-home-image">
    <section class="home-image-stage home-v40-5" aria-label="파파존스 판교2테크노밸리점 주문 시작 화면">
      <button class="home-hotspot dinein" aria-label="먹고가기 주문 시작" onclick="selectOrderType('dinein')">먹고가기</button>
@@ -939,7 +962,7 @@ function renderBase(){
      <div class="waiting-party"><button onclick="changeWaitingParty(-1)">−</button><strong>${state.waitingPartySize}명</strong><button onclick="changeWaitingParty(1)">＋</button></div>
      <div class="waiting-phone-display">${state.waitingPhoneDisplay||'전화번호 입력'}</div>
      <button class="waiting-clear" onclick="waitingClearPhone()">전체삭제</button>
-     <div class="number-pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="waitingAppendDigit(${n})">${n}</button>`).join('')}<button onclick="waitingBackspace()">⌫</button><button onclick="waitingAppendDigit(0)">0</button><button class="confirm" onclick="submitWaiting()">대기등록</button></div>
+     <div class="number-pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="waitingAppendDigit(${n})">${n}</button>`).join('')}<button onclick="waitingBackspace()">⌫</button><button onclick="waitingAppendDigit(0)">0</button><button class="confirm waiting-confirm-btn" ${String(state.waitingPhone||'').replace(/\D/g,'').length!==11?'disabled':''} onclick="submitWaiting()">대기등록</button></div>
    </div></section>`);
  }
  if(state.step==='waitingDone'){
@@ -969,7 +992,7 @@ function renderBase(){
  if(state.step==='dough'){
   if(state.promo==='normal'||state.promo==='takeout'){
    const crusts=combinedCrustOptions();
-   return shell(`<section class="base-combined-screen"><h1 class="title">도우 · 사이즈 · 크러스트를 선택해 주세요</h1><p class="sub">한 화면에서 순서대로 선택할 수 있습니다. 선택 가능한 항목만 활성화됩니다.</p><div class="base-section"><h2>1. 도우 타입</h2><div class="base-choice-grid two"><button class="base-choice-card ${state.dough==='hand'?'selected':''}" onclick="selectDoughCombined('hand')"><span>🍕</span><strong>수타도우</strong><small>R · L · F 선택 가능</small></button><button class="base-choice-card ${state.dough==='thin'?'selected':''}" onclick="selectDoughCombined('thin')"><span>◯</span><strong>씬도우</strong><small>F 사이즈 전용</small></button></div></div><div class="base-section"><h2>2. 사이즈</h2><div class="base-choice-grid three">${[['R','레귤러','23cm · 1~2인'],['L','라지','31cm · 2~3인'],['F','패밀리','36cm · 3~4인']].map(([id,name,desc])=>{const disabled=(state.dough==='thin'&&id!=='F')||(isHalf()&&id==='R');return `<button class="base-choice-card ${state.size===id?'selected':''} ${disabled?'disabled':''}" onclick="selectSizeCombined('${id}')"><strong>${name}</strong><small>${desc}</small></button>`}).join('')}</div></div><div class="base-section"><h2>3. 크러스트</h2><div class="base-choice-grid four">${crusts.map(c=>`<button class="base-choice-card ${state.crust===c.name?'selected':''} ${c.disabled?'disabled':''}" onclick="selectCrustCombined('${c.name}')"><strong>${c.name}</strong><small>${c.disabled?'현재 선택에서 이용 불가':c.name==='오리지널'||c.name==='씬'?'추가금 없음':state.size==='L'?'+4,000원':'+5,000원'}</small></button>`).join('')}</div></div><button class="btn primary combined-confirm" ${!state.dough||!state.size||!state.crust?'disabled':''} onclick="confirmCombinedBase()">피자 선택으로 이동 →</button></section>`,{auto:true});
+   return shell(`<section class="base-combined-screen"><h1 class="title">도우 · 사이즈 · 크러스트를 선택해 주세요</h1><p class="sub">한 화면에서 순서대로 선택할 수 있습니다. 선택 가능한 항목만 활성화됩니다.</p><div class="base-section dough-section"><h2>1. 도우 타입</h2><div class="base-choice-grid two"><button class="base-choice-card ${state.dough==='hand'?'selected':''}" onclick="selectDoughCombined('hand')"><span>🍕</span><strong>수타도우</strong><small>R · L · F 선택 가능</small></button><button class="base-choice-card ${state.dough==='thin'?'selected':''}" onclick="selectDoughCombined('thin')"><span>◯</span><strong>씬도우</strong><small>F 사이즈 전용</small></button></div></div><div class="base-section size-section"><h2>2. 사이즈</h2><div class="base-choice-grid three">${[['R','레귤러','23cm · 1~2인'],['L','라지','31cm · 2~3인'],['F','패밀리','36cm · 3~4인']].map(([id,name,desc])=>{const disabled=(state.dough==='thin'&&id!=='F')||(isHalf()&&id==='R');return `<button class="base-choice-card ${state.size===id?'selected':''} ${disabled?'disabled':''}" onclick="selectSizeCombined('${id}')"><strong>${name}</strong><small>${desc}</small></button>`}).join('')}</div></div><div class="base-section crust-section"><h2>3. 크러스트</h2><div class="base-choice-grid four">${crusts.map(c=>`<button class="base-choice-card ${state.crust===c.name?'selected':''} ${c.disabled?'disabled':''}" onclick="selectCrustCombined('${c.name}')"><strong>${c.name}</strong><small>${c.disabled?'현재 선택에서 이용 불가':c.name==='오리지널'||c.name==='씬'?'추가금 없음':state.size==='L'?'+4,000원':'+5,000원'}</small></button>`).join('')}</div></div><button class="btn primary combined-confirm" ${(isMobileMode()?(!state.dough||!state.size):(!state.dough||!state.size||!state.crust))?'disabled':''} onclick="confirmCombinedBase()">${isMobileMode()?'크러스트 선택으로 이동 →':'피자 선택으로 이동 →'}</button></section>`,{auto:true});
   }
   return shell(`<section class="crust-select"><h1 class="title">도우 타입을 선택해 주세요</h1><p class="sub">사진이 있는 큰 카드를 터치하면 바로 다음 단계로 이동합니다.</p><div class="dough-card-grid"><button type="button" class="crust-image-card ${state.dough==='hand'?'selected':''}" onclick="selectDough('hand')"><img src="images/crust/original.jpg" alt="수타도우 오리지널"><span class="crust-card-body"><strong>수타도우</strong><span>쫄깃하고 고소한 기본 도우</span><em>R · L · F 선택 가능</em></span></button><button type="button" class="crust-image-card ${state.dough==='thin'?'selected':''} ${state.promo==='upup'?'disabled':''}" onclick="selectDough('thin')"><img src="images/crust/thin.jpg" alt="씬도우"><span class="crust-card-body"><strong>씬도우</strong><span>바삭한 식감, 더욱 풍부한 토핑</span><em>${state.promo==='upup'?'UP & UP 적용 불가':'F 사이즈 전용 · 모든 피자 가능'}</em></span></button></div></section>`,{auto:true});
  }
@@ -1104,13 +1127,14 @@ function selectOrderType(type){
  render();
 }
 function selectPizzaModeCombined(mode){
- state.pizzaMode=mode;state.pizza=null;state.pizzaLeft=null;state.pizzaRight=null;state.halfStage='left';
  if(mode==='half'&&state.set===2)return alert('2인 세트는 하프앤하프를 선택할 수 없습니다.');
- render();
+ state.pizzaMode=mode;state.pizza=null;state.pizzaLeft=null;state.pizzaRight=null;state.halfStage='left';
+ if(isMobileMode()){state.step='crust';render();return;}
+ renderKeepingScroll();
 }
 function selectModeCrustCombined(crust){
  if(crust==='씬')return;
- state.dough='hand';state.crust=crust;state.pizza=null;render();
+ state.dough='hand';state.crust=crust;state.pizza=null;renderKeepingScroll();
 }
 function confirmModeCrustCombined(){
  if(!state.pizzaMode||!state.crust)return alert('피자 구성과 크러스트를 모두 선택해 주세요.');
@@ -1150,22 +1174,26 @@ function selectDoughCombined(dough){
   if(isHalf()&&state.size==='R')state.size=null;
   if(state.size==='R'&&['골드링','치즈롤'].includes(state.crust))state.crust=null;
  }
- render();
+ renderKeepingScroll();
 }
 function selectSizeCombined(size){
  if(isHalf()&&size==='R')return alert('하프앤하프는 라지 이상부터 주문 가능합니다.');
  if(state.dough==='thin'&&size!=='F')return;
  state.size=size;
  if(size==='R'&&['골드링','치즈롤'].includes(state.crust))state.crust=null;
- render();
+ renderKeepingScroll();
 }
 function selectCrustCombined(crust){
  const option=combinedCrustOptions().find(x=>x.name===crust);
  if(!option||option.disabled)return;
  state.crust=crust;
- render();
+ renderKeepingScroll();
 }
 function confirmCombinedBase(){
+ if(isMobileMode()){
+   if(!state.dough||!state.size)return alert('도우와 사이즈를 선택해 주세요.');
+   state.crust=null;state.step='crust';render();return;
+ }
  if(!state.dough||!state.size||!state.crust)return alert('도우, 사이즈, 크러스트를 모두 선택해 주세요.');
  state.step='pizza';render();
 }
@@ -1339,3 +1367,6 @@ function render(){homeLanguage='ko';localStorage.setItem('papaHomeLanguage','ko'
 render();
 
 // v40.17: 포장20% 통합 기본옵션, 3·4인 세트/UP&UP 피자구성+크러스트 통합 화면
+
+// v41.6 mobile: prevent double-tap zoom on keypad/control buttons.
+document.addEventListener('dblclick',e=>{if(e.target.closest('.number-pad,.qty,.drink-stepper-controls,.mobile-order-cards'))e.preventDefault();},{passive:false});
