@@ -19,6 +19,8 @@ const IMMEDIATE_MAX=20;
 const HOLD_WARN_MS=10000;
 const HOLD_RELEASE_MS=20000;
 let holdWarnTimer=null,holdReleaseTimer=null;
+let doneCountdownTimer=null;
+let doneCountdownValue=5;
 
 const ZONE_RULES={
  papa:{open:11*60,close:20*60,weekend:true},
@@ -160,6 +162,26 @@ function zoneCapacityText(zoneId){
    return `추가 가능 최대 ${free*4}명`;
  }
  return '';
+}
+
+function clearDoneCountdown(){
+ if(doneCountdownTimer){clearInterval(doneCountdownTimer);doneCountdownTimer=null;}
+}
+function startDoneCountdown(){
+ clearDoneCountdown();
+ doneCountdownValue=5;
+ const valueEl=document.getElementById('doneCountdownValue');
+ const textEl=document.getElementById('doneCountdownText');
+ if(valueEl)valueEl.textContent=String(doneCountdownValue);
+ if(textEl)textEl.textContent=`${doneCountdownValue}초 뒤 처음 화면으로 이동합니다`;
+ doneCountdownTimer=setInterval(()=>{
+   doneCountdownValue-=1;
+   const value=document.getElementById('doneCountdownValue');
+   const text=document.getElementById('doneCountdownText');
+   if(value)value.textContent=String(Math.max(0,doneCountdownValue));
+   if(text)text.textContent=doneCountdownValue>0?`${doneCountdownValue}초 뒤 처음 화면으로 이동합니다`:'처음 화면으로 이동합니다';
+   if(doneCountdownValue<=0){clearDoneCountdown();goHome();}
+ },1000);
 }
 
 function clearHoldTimers(){if(holdWarnTimer)clearTimeout(holdWarnTimer);if(holdReleaseTimer)clearTimeout(holdReleaseTimer);holdWarnTimer=holdReleaseTimer=null}
@@ -985,7 +1007,7 @@ function renderBase(){
   if(state.set){
    const includedList=visibleSides();
    const guide=state.set===2?'파스타 3종 중 1개가 세트에 포함됩니다.':state.set===3?'브라우니를 제외한 사이드 중 1개가 세트에 포함됩니다.':'브라우니를 제외한 사이드 중 2개가 세트에 포함됩니다.';
-   return shell(`<h1 class="title">사이드 메뉴를 선택해 주세요</h1><p class="sub">${guide}</p><section class="menu-section included-section"><div class="section-heading"><div><span class="section-badge">세트 포함</span><h2>포함 사이드 선택</h2></div><strong>${includedCount('includedSides')} / ${setSideLimit()}</strong></div><div class="grid side-grid compact-product-grid">${includedList.map(s=>itemCard(s,'includedSides',true)).join('')}</div></section><section class="menu-section extra-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>사이드 추가 주문</h2></div><span>선택 시 판매가가 추가됩니다</span></div><div class="extra-alert">⚠ 세트 구성 외 추가 상품입니다. ＋ 버튼을 누르면 추가금 안내 팝업이 표시됩니다.</div><div class="grid side-grid compact-product-grid">${SIDES.map(s=>itemCard(s,'sides',false)).join('')}</div></section>`,{nextDisabled:includedCount('includedSides')!==setSideLimit()});
+   return shell(`<h1 class="title">사이드 메뉴를 선택해 주세요</h1><p class="sub">${guide}</p><section class="menu-section included-section"><div class="section-heading"><div><span class="section-badge">세트 포함</span><h2>포함 사이드 선택</h2></div><strong>${includedCount('includedSides')} / ${setSideLimit()}</strong></div><div class="grid side-grid compact-product-grid">${includedList.map(s=>itemCard(s,'includedSides',true)).join('')}</div></section><section class="menu-section extra-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>사이드 추가 주문</h2></div><span>선택 시 판매가가 추가됩니다</span></div><div class="extra-alert">세트 구성 외 추가 상품이며 선택한 수량만큼 결제금액에 추가됩니다.</div><div class="grid side-grid compact-product-grid">${SIDES.map(s=>itemCard(s,'sides',false)).join('')}</div></section>`,{nextDisabled:includedCount('includedSides')!==setSideLimit()});
   }
   return shell(`<h1 class="title">사이드 메뉴를 선택해 주세요</h1><p class="sub">원하는 사이드를 추가해 보세요.</p><div class="grid side-grid compact-product-grid">${SIDES.map(s=>itemCard(s,'sides')).join('')}</div>`,{skip:true});
  }
@@ -1045,7 +1067,11 @@ function renderBase(){
      <span>결제 확인 후 조리가 시작됩니다.</span>
    </div>
    <small>결제 전에는 조리가 시작되지 않습니다.</small>
-   <button class="btn primary" onclick="goHome()">처음으로</button>
+   <div class="done-countdown" aria-live="polite">
+     <strong id="doneCountdownValue">5</strong>
+     <span id="doneCountdownText">5초 뒤 처음 화면으로 이동합니다</span>
+   </div>
+   <button class="btn primary" onclick="goHome()">지금 처음으로 가기</button>
  </section>`);
 
 }
@@ -1059,16 +1085,10 @@ function qty(key,id,d){
    if(cur>=2)return alert('동일 토핑은 최대 2개까지 선택할 수 있습니다.');
  }
  if(d>0&&state.set&&key==='includedSides'){
-   if(includedCount('includedSides')>=setSideLimit()){alert(`세트 기본 제공 수량을 초과했습니다.\n추가 주문은 아래 ‘사이드 추가 주문’ 섹션에서 선택해 주세요.`);requestAnimationFrame(()=>document.querySelector('.extra-section')?.scrollIntoView({behavior:'smooth',block:'start'}));return;}
+   if(includedCount('includedSides')>=setSideLimit()){requestAnimationFrame(()=>document.querySelector('.extra-section')?.scrollIntoView({behavior:'smooth',block:'start'}));return;}
  }
  if(d>0&&state.set&&key==='includedDrinks'){
-   if(includedCount('includedDrinks')>=1){alert('세트 기본 제공 수량을 초과했습니다.\n추가 주문은 아래 ‘음료 추가 주문’ 섹션에서 선택해 주세요.');requestAnimationFrame(()=>document.querySelector('.extra-section')?.scrollIntoView({behavior:'smooth',block:'start'}));return;}
- }
- if(d>0&&state.set&&(key==='sides'||key==='drinks')){
-   const list=key==='sides'?SIDES:DRINKS;
-   const item=list.find(x=>x.id===id);
-   const ok=confirm(`${item.name}은(는) 세트 포함 상품 외 추가 주문입니다.\n\n추가금 ${money(item.price)}이 결제금액에 더해집니다.\n추가하시겠습니까?`);
-   if(!ok)return;
+   if(includedCount('includedDrinks')>=1){requestAnimationFrame(()=>document.querySelector('.extra-section')?.scrollIntoView({behavior:'smooth',block:'start'}));return;}
  }
  cur=Math.max(0,Math.min(9,cur+d));obj[id]=cur;
  const preserve=['side','drink'].includes(state.step);
@@ -1229,6 +1249,7 @@ function reselectCurrent(){
  render();
 }
 async function goHome(){
+ clearDoneCountdown();
  await releaseCurrentSeat();
  state.orderType=null;state.cart=[];state.orderNo=null;state.orderId=null;state.partySize=null;state.pickupMode=null;state.pickupHour=null;state.pickupMinute=null;state.pickupTime=null;state.phone='010';state.phoneDisplay='010-';state.phonePrefixCleared=false;state.phonePurpose=null;
  clearCurrentSelection();
@@ -1313,7 +1334,7 @@ function applyUILanguage(){
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  nodes.forEach(n=>{const raw=n.nodeValue;const trimmed=raw.trim();if(!trimmed)return;const translated=translateDynamicText(trimmed,homeLanguage);if(translated!==trimmed)n.nodeValue=raw.replace(trimmed,translated)});
 }
-function render(){homeLanguage='ko';localStorage.setItem('papaHomeLanguage','ko');document.documentElement.lang='ko';renderBase();}
+function render(){homeLanguage='ko';localStorage.setItem('papaHomeLanguage','ko');document.documentElement.lang='ko';renderBase();if(state.step==='done')requestAnimationFrame(startDoneCountdown);else clearDoneCountdown();}
 
 render();
 
