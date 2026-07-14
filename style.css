@@ -2227,3 +2227,153 @@ html,body{
 .annex-status-legend span{position:relative;padding-left:20px}.annex-status-legend span:before{content:"";position:absolute;left:0;top:50%;width:12px;height:12px;border-radius:50%;transform:translateY(-50%)}.annex-status-legend .available:before{background:#1daa5f}.annex-status-legend .selected:before{background:#f5b400}.annex-status-legend .occupied:before{background:#e13030}
 @media(max-width:1050px){.annex-layout-wrap{grid-template-columns:1fr}.annex-seat-list{grid-template-columns:repeat(2,minmax(0,1fr))}.annex-seat-hotspot{min-width:112px;padding:10px}.annex-seat-hotspot strong{font-size:15px}.annex-seat-hotspot small,.annex-seat-hotspot em{font-size:10px}}
 @media(max-width:620px){.annex-seat-list{grid-template-columns:1fr}.annex-floorplan{min-height:420px;aspect-ratio:auto}.annex-floorplan>img{object-position:center}.annex-seat-hotspot{min-width:92px;padding:8px;grid-template-columns:26px 1fr}.annex-seat-number{width:25px;height:25px;font-size:13px}.annex-seat-hotspot strong{font-size:12px}.annex-seat-hotspot small{font-size:9px}.annex-seat-hotspot em{display:none}.annex-seat-hotspot.seat-1{left:9%;top:13%}.annex-seat-hotspot.seat-2{left:10%;top:41%}.annex-seat-hotspot.seat-3{left:39%;top:70%}.annex-seat-hotspot.seat-4{right:3%;top:20%}}
+
+/* v40.12: 전체 주문 화면 다크 테마 + 세트 이모지 구성 */
+.dark-app-shell,
+.dark-app-shell .shell-content{
+  background:#06150f!important;
+  color:#f7fbf8;
+}
+.dark-app-shell .header{
+  background:linear-gradient(180deg,#071b13,#06140e)!important;
+  border-bottom:1px solid rgba(90,188,132,.22)!important;
+  color:#fff!important;
+}
+.dark-app-shell .store-name,
+.dark-app-shell .progress{color:#d6e6dc!important}
+.dark-app-shell .main{
+  background:
+    radial-gradient(circle at 85% 5%,rgba(20,109,66,.18),transparent 34%),
+    linear-gradient(145deg,#071b13 0%,#030b08 100%)!important;
+  color:#f7fbf8!important;
+}
+.dark-app-shell .title{color:#fff!important}
+.dark-app-shell .sub{color:#aebfb5!important}
+.dark-app-shell .footer{
+  background:rgba(5,18,13,.97)!important;
+  border-top:1px solid rgba(90,188,132,.22)!important;
+  color:#fff!important;
+  box-shadow:0 -10px 30px rgba(0,0,0,.3)!important;
+}
+.dark-app-shell .selection-indicator{
+  background:#071b13!important;
+  border-color:rgba(90,188,132,.2)!important;
+}
+.dark-app-shell .selection-chip{
+  background:#0d241a!important;
+  border-color:rgba(83,166,118,.3)!important;
+}
+.dark-app-shell .selection-chip small{color:#91a99a!important}
+.dark-app-shell .selection-chip strong{color:#fff!important}
+.dark-app-shell .notice,
+.dark-app-shell .summary,
+.dark-app-shell .menu-section,
+.dark-app-shell .cart-item,
+.dark-app-shell .party-counter-card,
+.dark-app-shell .pickup-result,
+.dark-app-shell .wheel-wrap,
+.dark-app-shell .phone-display,
+.dark-app-shell .phone-actions,
+.dark-app-shell .set-notice{
+  background:#0c2118!important;
+  color:#ecf5ef!important;
+  border-color:rgba(86,177,124,.28)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.24)!important;
+}
+.dark-app-shell .summary-row,
+.dark-app-shell .cart-item,
+.dark-app-shell .menu-section{border-color:rgba(86,177,124,.2)!important}
+.dark-app-shell .service-card,
+.dark-app-shell .takeout-choice-card,
+.dark-app-shell .promo-card,
+.dark-app-shell .set-card,
+.dark-app-shell .crust-image-card,
+.dark-app-shell .topping-choice-card,
+.dark-app-shell .card{
+  background:linear-gradient(155deg,#10281d,#091710)!important;
+  border-color:rgba(90,188,132,.25)!important;
+  color:#fff!important;
+  box-shadow:0 16px 35px rgba(0,0,0,.3)!important;
+}
+.dark-app-shell .service-card:hover,
+.dark-app-shell .set-card:hover,
+.dark-app-shell .card:hover{border-color:#3bb36d!important}
+.dark-app-shell .service-card strong,
+.dark-app-shell .service-desc,
+.dark-app-shell .set-card strong,
+.dark-app-shell .set-size,
+.dark-app-shell .set-copy,
+.dark-app-shell .card h3,
+.dark-app-shell .card p{color:#f5fbf7!important}
+.dark-app-shell .service-benefit,
+.dark-app-shell .set-action,
+.dark-app-shell .set-card-badge{
+  background:rgba(255,255,255,.08)!important;
+  color:#d8e9df!important;
+}
+.dark-app-shell .btn.secondary,
+.dark-app-shell .btn.ghost,
+.dark-app-shell .clear-phone{
+  background:#11281e!important;
+  color:#fff!important;
+  border-color:rgba(90,188,132,.28)!important;
+}
+.dark-app-shell .number-pad button,
+.dark-app-shell .wheel-list button{
+  background:#11281e!important;
+  color:#fff!important;
+  border:1px solid rgba(90,188,132,.22)!important;
+  box-shadow:0 7px 17px rgba(0,0,0,.2)!important;
+}
+.dark-app-shell .number-pad button:active,
+.dark-app-shell .wheel-list button.active{background:#176b43!important}
+.dark-app-shell .phone-display{color:#fff!important}
+.dark-app-shell .phone-note{color:#9db2a5!important}
+.dark-app-shell .auto-guide{background:#10271d!important;color:#cae2d3!important}
+
+/* 주문 유형 선택 화면 다크 강화 */
+.dark-app-shell .service-select{max-width:1050px}
+.dark-app-shell .service-card{min-height:430px}
+.dark-app-shell .service-icon{filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+
+/* 2·3·4인 세트: 사진 대신 간단한 이모지 구성 */
+.set-select-v403{max-width:1220px!important}
+.set-select-v403 .set-grid{max-width:none!important;gap:24px!important}
+.set-select-v403 .set-card{
+  min-height:460px!important;
+  padding:34px 24px 28px!important;
+  justify-content:flex-start!important;
+}
+.set-emoji-combo{
+  width:100%;
+  min-height:150px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  align-items:center;
+  gap:10px;
+  margin:38px 0 18px;
+  padding:18px;
+  border-radius:22px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.1);
+}
+.set-emoji-combo>span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:0}
+.set-emoji-combo b{font-size:55px;line-height:1;white-space:nowrap;filter:drop-shadow(0 7px 8px rgba(0,0,0,.28))}
+.set-emoji-combo small{font-size:14px;font-weight:900;color:#d9e9df;white-space:nowrap}
+.set-select-v403 .set-card strong{font-size:36px!important}
+.set-select-v403 .set-size{font-size:20px!important;color:#a9c5b4!important}
+.set-select-v403 .set-copy{font-size:19px!important;line-height:1.5!important;min-height:30px!important;color:#f4faf6!important;font-weight:850}
+.set-select-v403 .set-price{font-size:31px!important;margin-top:9px}
+.set-select-v403 .set-two{background:linear-gradient(155deg,#102a20,#0b1b14)!important}
+.set-select-v403 .set-three{background:linear-gradient(155deg,#302811,#151208)!important;border-color:rgba(239,196,44,.5)!important}
+.set-select-v403 .set-four{background:linear-gradient(155deg,#0d2b1a,#07160e)!important}
+
+@media(max-width:560px){
+  .dark-app-shell .service-card{min-height:170px!important}
+  .set-select-v403 .set-card{min-height:210px!important;grid-template-columns:92px 1fr!important}
+  .set-emoji-combo{grid-row:1/6;width:84px;min-height:150px;margin:0;padding:8px;grid-template-columns:1fr;gap:4px}
+  .set-emoji-combo b{font-size:27px}
+  .set-emoji-combo small{font-size:9px}
+  .set-select-v403 .set-card strong{font-size:25px!important}
+  .set-select-v403 .set-copy{font-size:14px!important}
+}
