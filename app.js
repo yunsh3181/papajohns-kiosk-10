@@ -1,6 +1,6 @@
 const app=document.getElementById('app');
 const money=n=>new Intl.NumberFormat('ko-KR').format(Math.round(n))+'원';
-const state={step:'home',orderType:null,promo:null,dough:null,size:null,crust:null,pizzaMode:'single',pizza:null,pizzaLeft:null,pizzaRight:null,halfStage:'left',toppings:{},sides:{},drinks:{},includedSides:{},includedDrinks:{},set:null,category:'ALL',orderNo:null,toppingExpanded:false,cart:[],seatZone:null,seatId:null,seatName:null,seatCapacity:null,seats:{},partySize:null,pickupMode:null,pickupHour:null,pickupMinute:null,pickupTime:null,phone:'010',phoneDisplay:'010-',phonePrefixCleared:false,waitingSeatId:null,waitingSeatName:null,waitingPartySize:1,waitingPhone:'010',waitingPhoneDisplay:'010-',phonePurpose:null};
+const state={step:'home',orderType:null,promo:null,dough:null,size:null,crust:null,pizzaMode:'single',pizza:null,pizzaLeft:null,pizzaRight:null,halfStage:'left',toppings:{},sides:{},drinks:{},includedSides:{},includedDrinks:{},set:null,category:'ALL',orderNo:null,toppingExpanded:false,cart:[],seatZone:null,seatId:null,seatName:null,seatCapacity:null,seats:{},partySize:null,pickupMode:null,pickupHour:null,pickupMinute:null,pickupTime:null,phone:'010',phoneDisplay:'010-',phonePrefixCleared:false,waitingSeatId:null,waitingSeatName:null,waitingPartySize:1,waitingPhone:'010',waitingPhoneDisplay:'010-',phonePurpose:null,homePromoShortcut:null};
 const steps=['home','type','partySize','pickup','pickupTime','phone','seatZone','seatSelect','waiting','waitingDone','promo','setChoice','pizzaMode','dough','size','crust','pizza','topping','side','drink','review','cart','done'];
 const labels={waiting:'줄서기',waitingDone:'줄서기 완료',type:'이용방법',partySize:'인원 선택',pickup:'포장 방식',pickupTime:'예약 시간',phone:'전화번호',seatZone:'구역 선택',seatSelect:'좌석 선택',promo:'혜택',setChoice:'세트 선택',pizzaMode:'피자 구성',dough:'도우',size:'사이즈',crust:'크러스트',pizza:'피자',topping:'토핑',side:'사이드',drink:'음료',review:'주문확인',cart:'장바구니'};
 
@@ -42,11 +42,11 @@ function openReservationTime(){
  state.pickupTime=state.pickupMinute===null?null:pad2(state.pickupHour)+':'+pad2(state.pickupMinute);
  state.step='pickupTime';render();
 }
-function chooseImmediatePickup(){const r=immediatePickupRange();state.pickupMode='now';state.pickupHour=Math.floor(r.to/60);state.pickupMinute=r.to%60;state.pickupTime=pad2(state.pickupHour)+':'+pad2(state.pickupMinute);state.step='promo';render()}
+function chooseImmediatePickup(){const r=immediatePickupRange();state.pickupMode='now';state.pickupHour=Math.floor(r.to/60);state.pickupMinute=r.to%60;state.pickupTime=pad2(state.pickupHour)+':'+pad2(state.pickupMinute);if(state.homePromoShortcut==='takeout'){state.homePromoShortcut=null;choosePromo('takeout');return;}state.step='promo';render()}
 function pickupMinutes(){return state.pickupHour===null||state.pickupMinute===null?null:Number(state.pickupHour)*60+Number(state.pickupMinute)}
 function pickupIsHappyHour(){const m=pickupMinutes();return state.orderType==='takeout'&&m!==null&&m>=HAPPY_START_MIN&&m<=HAPPY_END_MIN}
-function availableHours(){const min=minPickupMinutes(),a=[];for(let h=11;h<=21;h++){if(h*60+55>=min&&h*60<=STORE_CLOSE_MIN)a.push(h)}return a}
-function availableMinutesForHour(h){const min=minPickupMinutes(),a=[];for(let m=0;m<60;m+=5){const v=h*60+m;if(v>=min&&v<=STORE_CLOSE_MIN)a.push(m)}return a}
+function availableHours(){const min=minPickupMinutes(),a=[];const start=state.homePromoShortcut==='happyhour'?16:11;const end=state.homePromoShortcut==='happyhour'?20:21;for(let h=start;h<=end;h++){if(h*60+55>=min&&h*60<=Math.min(STORE_CLOSE_MIN,end*60))a.push(h)}return a}
+function availableMinutesForHour(h){const min=minPickupMinutes(),a=[];const max=state.homePromoShortcut==='happyhour'?HAPPY_END_MIN:STORE_CLOSE_MIN;for(let m=0;m<60;m+=5){const v=h*60+m;if(v>=min&&v<=max&&(!state.homePromoShortcut||state.homePromoShortcut!=='happyhour'||v>=HAPPY_START_MIN))a.push(m)}return a}
 function choosePickupHour(h){
  const pageY=window.scrollY;
  const hs=document.querySelector('.hour-wheel')?.scrollTop||0;
@@ -71,7 +71,7 @@ function confirmPickup(){
  if(state.pickupMode!=='reserve')return;
  if(state.pickupHour===null||state.pickupMinute===null)return alert('픽업 시간을 선택해 주세요.');
  state.pickupTime=`${pad2(state.pickupHour)}:${pad2(state.pickupMinute)}`;
- state.step='promo';render();
+ if(state.homePromoShortcut==='happyhour'){state.homePromoShortcut=null;choosePromo('happyhour');return;}if(state.homePromoShortcut==='takeout'){state.homePromoShortcut=null;choosePromo('takeout');return;}state.step='promo';render();
 }
 function formatPhone(raw){
  const d=String(raw||'').replace(/\D/g,'').slice(0,11);
@@ -94,7 +94,7 @@ function confirmPhone(){
  state.phone=digits;
  state.phoneDisplay=formatPhone(digits);
  if(state.phonePurpose==='checkout'){
-   state.phonePurpose=null;
+   state.phonePurpose=null;state.homePromoShortcut=null;
    checkoutCart();
    return;
  }
@@ -274,10 +274,13 @@ function subscribeSeats(){
    if(['seatZone','seatSelect'].includes(state.step))render();
  },err=>console.warn('좌석 실시간 연결 실패',err));
 }
+function reservationDate(value){if(!value)return null;if(typeof value.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d;}
+function reservationLocked(remote){const d=reservationDate(remote.reservationAt);return Boolean(d&&d.getTime()-Date.now()<=30*60*1000);}
 function seatInfo(id){
  const master=SEAT_MASTER.find(s=>s.id===id);
  const remote=state.seats[id]||{};
- return {...master,...remote,status:remote.status||'empty',updatedAt:remote.updatedAt||null};
+ const status=reservationLocked(remote)?'reserved':(remote.status||'empty');
+ return {...master,...remote,status,updatedAt:remote.updatedAt||null};
 }
 
 function changePartySize(delta){
@@ -498,7 +501,7 @@ function drinkFamilyCard(items,key,included=false){
  const brandClass=m.brand==='sprite'?'sprite':m.brand==='coke'?'coke':'other';
  const familyName=m.brand==='sprite'?(m.zero?'스프라이트 제로':'스프라이트'):(m.zero?'코카콜라 제로':'코카콜라');
  const imageItem=items.find(x=>drinkMeta(x).volume!=='500mL')||first;
- return `<article class="drink-family-card ${typeClass} ${brandClass}"><img class="drink-family-image product-cutout" src="${imageItem.img}" alt="${familyName}"><div class="drink-family-content"><span class="drink-family-type">${typeLabel}</span><h3>${familyName}</h3><div class="drink-size-buttons">${items.map(x=>{const q=state[key][x.id]||0;const vm=drinkMeta(x);return `<div class="drink-size-stepper ${q?'selected':''}"><div><b>${vm.volume}</b>${included?'<small>세트 포함</small>':`<small>${money(x.price)}</small>`}</div><div class="drink-stepper-controls"><button onclick="qty('${key}','${x.id}',-1)" ${q<=0?'disabled':''}>−</button><strong>${q}</strong><button onclick="qty('${key}','${x.id}',1)">＋</button></div></div>`}).join('')}</div></div></article>`;
+ const familySelected=items.some(x=>(state[key][x.id]||0)>0); return `<article class="drink-family-card ${typeClass} ${brandClass} ${familySelected?'selected':''}">${familySelected?'<span class="card-selected-check">✓ 선택됨</span>':''}<img class="drink-family-image product-cutout" src="${imageItem.img}" alt="${familyName}"><div class="drink-family-content"><span class="drink-family-type">${typeLabel}</span><h3>${familyName}</h3><div class="drink-size-buttons">${items.map(x=>{const q=state[key][x.id]||0;const vm=drinkMeta(x);return `<div class="drink-size-stepper ${q?'selected':''}"><div><b>${vm.volume}</b>${included?'<small>세트 포함</small>':`<small>${money(x.price)}</small>`}</div><div class="drink-stepper-controls"><button onclick="qty('${key}','${x.id}',-1)" ${q<=0?'disabled':''}>−</button><strong>${q}</strong><button onclick="qty('${key}','${x.id}',1)">＋</button></div></div>`}).join('')}</div></div></article>`;
 }
 
 function drinkFamilies(list){
@@ -643,18 +646,18 @@ function orderStageIndex(){
 function orderSidebar(){
  const stages=[['세트 선택','promo'],['피자 선택','pizza'],['크러스트 선택','crust'],['사이드 선택','side'],['음료 선택','drink'],['주문 확인','review']];
  const active=orderStageIndex(); const c=calc(); const count=selectedCount('sides')+selectedCount('includedSides')+selectedCount('drinks')+selectedCount('includedDrinks');
- return `<aside class="order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="order-type-stack"><div class="order-type-pill ${state.orderType==='takeout'?'active':''}"><b>▣</b><span>포장 주문<small>TAKE OUT</small></span>${state.orderType==='takeout'?'<i>✓</i>':''}</div><div class="order-type-pill ${state.orderType==='dinein'?'active':''}"><b>♨</b><span>먹고가기<small>DINE IN</small></span>${state.orderType==='dinein'?'<i>✓</i>':''}</div></div><div class="sidebar-stage-title">주문 단계</div><nav class="sidebar-stages">${stages.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="reselectCurrent()">↻ 다시선택</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><div class="sidebar-cart">🛒 <strong>${count}개 · ${money(c.total)}</strong></div><small class="sidebar-version">v41.0</small></aside>`;
+ return `<aside class="order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="order-type-stack"><div class="order-type-pill ${state.orderType==='takeout'?'active':''}"><b>▣</b><span>포장 주문<small>TAKE OUT</small></span>${state.orderType==='takeout'?'<i>✓</i>':''}</div><div class="order-type-pill ${state.orderType==='dinein'?'active':''}"><b>♨</b><span>먹고가기<small>DINE IN</small></span>${state.orderType==='dinein'?'<i>✓</i>':''}</div></div><div class="sidebar-stage-title">주문 단계</div><nav class="sidebar-stages">${stages.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="reselectCurrent()">↻ 다시선택</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><div class="sidebar-cart">🛒 <strong>${count}개 · ${money(c.total)}</strong></div><small class="sidebar-version">v41.2</small></aside>`;
 }
 function preOrderSidebar(){
  const flow=[['주문방식','type'],['포장방식','pickup'],['픽업시간','pickupTime']];
  const active=Math.max(0,flow.findIndex(x=>x[1]===state.step));
- return `<aside class="order-sidebar pre-order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">포장 주문 설정</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><small class="sidebar-version">v41.0</small></aside>`;
+ return `<aside class="order-sidebar pre-order-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">포장 주문 설정</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><small class="sidebar-version">v41.2</small></aside>`;
 }
 
 function dineSetupSidebar(){
  const flow=[['인원 선택','partySize'],['구역 선택','seatZone'],['좌석 선택','seatSelect'],['메뉴 선택','promo'],['주문 확인','review']];
  const active=Math.max(0,flow.findIndex(x=>x[1]===state.step));
- return `<aside class="order-sidebar dine-setup-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">먹고가기 주문</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><small class="sidebar-version">v41.0</small></aside>`;
+ return `<aside class="order-sidebar dine-setup-sidebar"><div class="sidebar-brand"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><small>판교2테크노밸리점</small></div><div class="sidebar-stage-title">먹고가기 주문</div><nav class="sidebar-stages">${flow.map((x,i)=>`<div class="sidebar-stage ${i<active?'done':''} ${i===active?'active':''}"><span>${i+1}</span><b>${x[0]}</b><em>${i<active?'✓':i===active?'›':''}</em></div>`).join('')}</nav><div class="sidebar-actions"><button onclick="back()">← 이전</button><button onclick="goHome()">⌂ 처음으로 가기</button></div><small class="sidebar-version">v41.2</small></aside>`;
 }
 
 function preOrderIndicator(){
@@ -703,6 +706,13 @@ function showHomeInfo(type){
 }
 function closeHomeInfo(){const el=document.getElementById('homeInfoModal');if(el)el.classList.remove('open')}
 
+function startHomeHappyHour(){
+ state.orderType='takeout';state.set=null;state.homePromoShortcut='happyhour';state.pickupMode=null;state.pickupHour=null;state.pickupMinute=null;state.pickupTime=null;
+ const now=nowMinutes();
+ if(now>=HAPPY_START_MIN&&now<=HAPPY_END_MIN){const r=immediatePickupRange();state.pickupMode='now';state.pickupHour=Math.floor(r.to/60);state.pickupMinute=r.to%60;state.pickupTime=pad2(state.pickupHour)+':'+pad2(state.pickupMinute);state.homePromoShortcut=null;choosePromo('happyhour');return;}
+ openReservationTime();
+}
+function startHomeTakeoutDiscount(){state.orderType='takeout';state.set=null;state.homePromoShortcut='takeout';state.pickupMode=null;state.pickupHour=null;state.pickupMinute=null;state.pickupTime=null;state.step='pickup';render();}
 function mobileHomeUI(){
  const d={store:'파파존스 판교2테크노밸리점',headline:'오늘도 갓 구운 피자를\n가장 맛있게 즐겨보세요.',take:'포장 주문',takeDesc:'바로주문 · 예약주문 · 해피아워',takeBtn:'포장 주문 시작하기 →',dine:'먹고가기',dineDesc:'인원 선택 · 좌석 선택 · 세트 주문',dineBtn:'매장 주문 시작하기 →',event:'이벤트 / 혜택',menu:'메뉴 보기',coupon:'쿠폰 사용',storeInfo:'매장 안내',review:'리뷰 이벤트'};
  return `<div class="mobile-home-ui"><div class="mobile-home-top"><img src="images/home_logo_v33.png" alt="PAPA JOHNS"><div class="mobile-korean-only">한국어</div></div><div class="mobile-home-copy"><span>${d.store}</span><h1>${d.headline.replace('\n','<br>')}</h1><p>Better Ingredients. Better Pizza.</p></div><div class="mobile-order-cards"><button class="mobile-takeout" onclick="selectOrderType('takeout')"><small>TAKE OUT</small><strong>${d.take}</strong><span>${d.takeDesc}</span><em>${d.takeBtn}</em></button><button class="mobile-dinein" onclick="selectOrderType('dinein')"><small>DINE IN</small><strong>${d.dine}</strong><span>${d.dineDesc}</span><em>${d.dineBtn}</em></button></div><div class="mobile-home-links"><button onclick="showHomeInfo('event')">${d.event}</button><button onclick="showHomeInfo('menu')">${d.menu}</button><button onclick="showHomeInfo('coupon')">${d.coupon}</button><button onclick="showHomeInfo('store')">${d.storeInfo}</button><button onclick="showHomeInfo('review')">${d.review}</button></div></div>`;
@@ -715,8 +725,8 @@ function renderBase(){
    <section class="home-image-stage home-v40-5" aria-label="파파존스 판교2테크노밸리점 주문 시작 화면">
      <button class="home-hotspot dinein" aria-label="먹고가기 주문 시작" onclick="selectOrderType('dinein')">먹고가기</button>
      <button class="home-hotspot takeout" aria-label="포장하기 주문 시작" onclick="selectOrderType('takeout')">포장하기</button>
-     <button class="home-hotspot happyhour" aria-label="해피아워 안내" onclick="showHomeInfo('event')">해피아워</button>
-     <button class="home-hotspot discount" aria-label="포장 할인 안내" onclick="showHomeInfo('event')">포장 할인</button>
+     <button class="home-hotspot happyhour" aria-label="해피아워 안내" onclick="startHomeHappyHour()">해피아워</button>
+     <button class="home-hotspot discount" aria-label="포장 할인 안내" onclick="startHomeTakeoutDiscount()">포장 할인</button>
      <button class="home-hotspot drinkpromo" aria-label="신규 음료 안내" onclick="showHomeInfo('menu')">신규 음료</button>
      <div class="home-info-modal" id="homeInfoModal" onclick="if(event.target===this)closeHomeInfo()">
        <div class="home-info-card"><h2 id="homeInfoTitle"></h2><p id="homeInfoText"></p><button onclick="closeHomeInfo()">확인</button></div>
@@ -932,7 +942,7 @@ function renderBase(){
    ];
    return shell(`<section class="mode-crust-combined"><h1 class="title">피자 구성과 크러스트를 선택해 주세요</h1><p class="sub">한 판 또는 하프앤하프를 선택한 뒤 크러스트까지 한 화면에서 선택해 주세요.</p><div class="base-section"><h2>1. 피자 구성</h2><div class="topping-choice-grid"><button type="button" class="topping-choice-card add ${state.pizzaMode==='single'?'selected':''}" onclick="selectPizzaModeCombined('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip ${state.pizzaMode==='half'?'selected':''}" onclick="selectPizzaModeCombined('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></div><div class="base-section"><h2>2. 크러스트</h2><div class="base-choice-grid four">${crusts.map(c=>`<button class="base-choice-card ${state.crust===c.name?'selected':''} ${c.disabled?'disabled':''}" onclick="selectModeCrustCombined('${c.name}')"><strong>${c.name}</strong><small>${c.desc}</small></button>`).join('')}</div></div><button class="btn primary combined-confirm" ${!state.pizzaMode||!state.crust?'disabled':''} onclick="confirmModeCrustCombined()">피자 선택으로 이동 →</button></section>`,{auto:true});
   }
-  return shell(`<section class="topping-choice"><h1 class="title">피자 구성을 선택해 주세요</h1><p class="sub">하프앤하프는 L/F 사이즈에서만 가능하며 추가금 1,000원이 발생합니다.</p><div class="topping-choice-grid"><button type="button" class="topping-choice-card add" onclick="selectPizzaMode('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip" onclick="selectPizzaMode('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></section>`,{auto:true});
+  return shell(`<section class="topping-choice"><h1 class="title">피자 구성을 선택해 주세요</h1><p class="sub">하프앤하프는 L/F 사이즈에서만 가능하며 추가금 1,000원이 발생합니다.</p><div class="topping-choice-grid"><button type="button" class="topping-choice-card add ${state.pizzaMode==='single'?'selected':''}" onclick="selectPizzaMode('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip ${state.pizzaMode==='half'?'selected':''}" onclick="selectPizzaMode('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></section>`,{auto:true});
  }
  if(state.step==='dough'){
   if(state.promo==='normal'||state.promo==='takeout'){
@@ -969,7 +979,7 @@ function renderBase(){
  }
  if(state.step==='topping'){
   if(!state.toppingExpanded)return shell(`<section class="topping-choice"><h1 class="title">토핑을 추가하시겠어요?</h1><p class="sub">원하시는 방법을 터치해 주세요.</p><div class="topping-choice-grid"><button type="button" class="topping-choice-card add" onclick="openToppings()"><span class="choice-icon">➕</span><strong>토핑 추가하기</strong><span>치즈, 고기, 야채 토핑을 선택합니다</span></button><button type="button" class="topping-choice-card skip" onclick="skipToppings()"><span class="choice-icon">➡️</span><strong>건너뛰기</strong><span>추가 토핑 없이 다음 단계로 이동합니다</span></button></div></section>`,{auto:true});
-  return shell(`<h1 class="title">추가할 토핑을 선택해 주세요</h1><p class="sub">전체 합계 최대 5개, 동일 토핑 최대 2개 · 선택한 토핑 금액은 주문금액에 추가됩니다.</p><div class="grid four">${TOPPINGS.map(t=>{const q=state.toppings[t.id]||0;return `<div class="card"><h3>${t.name}</h3><p>${money(t.price[effectiveSize()])}</p><div class="qty"><button onclick="qty('toppings','${t.id}',-1)">−</button><strong>${q}</strong><button onclick="qty('toppings','${t.id}',1)">＋</button></div></div>`}).join('')}</div>`);
+  return shell(`<h1 class="title">추가할 토핑을 선택해 주세요</h1><p class="sub">전체 합계 최대 5개, 동일 토핑 최대 2개 · 선택한 토핑 금액은 주문금액에 추가됩니다.</p><div class="grid four">${TOPPINGS.map(t=>{const q=state.toppings[t.id]||0;return `<div class="card ${q>0?'selected':''}">${q>0?'<span class="card-selected-check">✓ 선택됨</span>':''}<h3>${t.name}</h3><p>${money(t.price[effectiveSize()])}</p><div class="qty"><button onclick="qty('toppings','${t.id}',-1)">−</button><strong>${q}</strong><button onclick="qty('toppings','${t.id}',1)">＋</button></div></div>`}).join('')}</div>`);
  }
  if(state.step==='side'){
   if(state.set){
@@ -990,7 +1000,7 @@ function renderBase(){
   }
   return shell(`<section class="drink-screen-v38"><div class="drink-screen-head"><div><h1 class="title">음료를 선택해 주세요</h1><p class="sub">원하는 음료를 카드에서 선택하고 − / ＋ 버튼으로 수량을 조절하세요.</p></div></div>
   <section class="menu-section included-section drink-layout-section"><div class="section-heading"><div><span class="section-badge">세트 포함</span><h2>포함 음료 선택</h2></div><strong>${includedCount('includedDrinks')} / 1</strong></div><p class="set-drink-rule">${setRule}</p><div class="grid four drink-grid-v38">${includedList.map(d=>drinkCard(d,'includedDrinks',true)).join('')}</div></section>
-  <section class="menu-section extra-section drink-layout-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>음료 추가 주문</h2></div><span>수량 버튼으로 여러 개 주문할 수 있습니다</span></div><div class="grid four drink-grid-v38">${DRINKS.map(d=>drinkCard(d,'drinks',false)).join('')}</div></section></section>`,{nextDisabled:includedCount('includedDrinks')!==1});
+  <section class="menu-section extra-section drink-layout-section"><div class="section-heading"><div><span class="section-badge extra">추가 결제</span><h2>음료 추가 주문</h2></div><span>일반주문과 동일하게 종류와 용량을 선택하세요</span></div><div class="drink-family-grid">${drinkFamilies(DRINKS).map(f=>drinkFamilyCard(f.items,'drinks',false)).join('')}</div></section></section>`,{nextDisabled:includedCount('includedDrinks')!==1});
  }
  if(state.step==='review'){
   const c=calc();

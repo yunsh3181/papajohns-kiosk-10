@@ -2815,3 +2815,18 @@ html,body{
   .drink-family-card{grid-template-columns:96px minmax(0,1fr)!important;min-height:170px!important}
   .drink-family-image{width:78px!important;height:130px!important;max-width:78px!important;max-height:130px!important}
 }
+
+/* v41.2 unified selection feedback */
+.topping-choice-card.selected,.base-choice-card.selected,.crust-image-card.selected,.card.selected,.drink-family-card.selected,.drink-size-stepper.selected{
+  border-color:#ffd43b!important;
+  box-shadow:0 0 0 4px rgba(255,212,59,.24),0 14px 34px rgba(0,0,0,.24)!important;
+}
+.topping-choice-card.selected,.base-choice-card.selected,.crust-image-card.selected,.card.selected,.drink-family-card.selected{position:relative}
+.topping-choice-card.selected:after,.base-choice-card.selected:after,.crust-image-card.selected:after,.card.selected:after{
+  content:'✓ 선택됨';position:absolute;top:12px;right:12px;z-index:5;background:#ffd43b;color:#302400;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:950;
+}
+.card-selected-check{position:absolute;top:12px;right:12px;z-index:6;background:#ffd43b!important;color:#302400!important;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:950}
+.drink-family-card.selected{outline:3px solid #ffd43b;outline-offset:0}
+.drink-size-stepper.selected{background:rgba(255,212,59,.12)!important}
+.home-hotspot.happyhour,.home-hotspot.discount{cursor:pointer}
+.home-hotspot.happyhour:after,.home-hotspot.discount:after{content:'바로 주문';display:block;font-size:10px;margin-top:2px;font-weight:900}
