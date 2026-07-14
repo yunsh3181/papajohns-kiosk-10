@@ -2761,3 +2761,10 @@ html,body{
 /* 전화번호는 숫자 11자리일 때만 활성화 */
 .phone-confirm-btn:disabled{pointer-events:none!important}
 .phone-confirm-btn:not(:disabled){background:#d71920!important;color:#fff!important;opacity:1!important}
+
+
+/* v41.0 navigation and checkout phone flow */
+.sidebar-actions button:last-child,.pre-order-indicator>button{background:#1677d2!important;color:#fff!important;border-color:#1677d2!important}
+.phone-order-guide{max-width:620px;margin:0 auto 18px;padding:14px 18px;border-radius:14px;background:#123b5b;color:#eaf6ff;font-weight:900;text-align:center}
+.seat-zone-card:not(.zone-disabled) em{color:#fff!important}
+.seat-zone-card:not(.zone-disabled) em:last-child{font-weight:950}
