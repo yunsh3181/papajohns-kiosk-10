@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#005b2b" />
   <title>판교2테크노밸리점 주문 관리자</title>
-  <link rel="stylesheet" href="admin.css?v=40.15" />
+  <link rel="stylesheet" href="admin.css?v=40.17" />
 </head>
 <body>
 <div id="adminLoginGate" class="admin-login-gate">
@@ -37,17 +37,16 @@
     <section id="ordersPanel">
     <section class="stats">
       <article><span>결제대기</span><strong id="newCount">0</strong></article>
-      <article><span>결제완료/조리중</span><strong id="cookingCount">0</strong></article>
+      <article><span>접수/조리중</span><strong id="cookingCount">0</strong></article>
       <article><span>완료</span><strong id="doneCount">0</strong></article>
       <article><span>오늘 주문금액</span><strong id="todaySales">0원</strong></article>
     </section>
 
     <nav class="filters" id="filters">
-      <button class="active" data-filter="active">진행 중</button>
-      <button data-filter="payment_pending">결제대기</button>
-      <button data-filter="paid">결제완료</button>
+      <button class="active" data-filter="payment_pending">결제대기</button>
+      <button data-filter="accepted">접수</button>
       <button data-filter="cooking">조리중</button>
-      <button data-filter="ready">조리완료</button>
+      <button data-filter="completed">완료</button>
       <button data-filter="all">전체</button>
     </nav>
 
@@ -85,8 +84,8 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js?v=40.15"></script>
-  <script src="data.js?v=40.15"></script>
-  <script src="admin.js?v=40.15"></script>
+  <script src="firebase-config.js?v=40.17"></script>
+  <script src="data.js?v=40.17"></script>
+  <script src="admin.js?v=40.17"></script>
 </body>
 </html>

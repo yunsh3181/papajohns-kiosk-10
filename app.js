@@ -920,9 +920,21 @@ function renderBase(){
   return shell(`<section class="promo-select"><h1 class="title">주문 유형을 선택해 주세요</h1><p class="sub">${dinein?'세트메뉴, UP & UP, 일반주문 중 선택해 주세요.':'적용할 주문 혜택을 선택해 주세요.'}</p><div class="promo-grid ${dinein?'three':'four'}">${cards}</div><div class="notice promo-notice">UP & UP은 L 사이즈 판매 피자 전용입니다. 결제는 L 피자 가격으로 하고, F 사이즈와 선택 크러스트로 무료 업그레이드됩니다.</div></section>`,{auto:true});
  }
  if(state.step==='setChoice')return shell(`<section class="set-select set-select-v403"><h1 class="title">세트메뉴를 선택해 주세요</h1><p class="sub">인원에 맞는 구성을 확인한 뒤 세트를 선택해 주세요.</p><div class="set-grid">${[2,3,4].map(n=>{const meta=n===2?{badge:'2인 추천',size:'레귤러',price:24000,copy:'피자 + 파스타 + 작은 음료',cls:'set-two',icons:[['🍕','피자'],['🍝','파스타'],['🥤','작은 음료']]}:n===3?{badge:'가장 인기',size:'라지',price:33000,copy:'피자 + 사이드 1종 + 큰 음료',cls:'set-three',icons:[['🍕','피자'],['🍗','사이드 1종'],['🧃','큰 음료']]}:{badge:'가성비 최고',size:'패밀리',price:42000,copy:'피자 + 사이드 2종 + 큰 음료',cls:'set-four',icons:[['🍕','피자'],['🍗🍟','사이드 2종'],['🧃','큰 음료']]};return `<button type="button" class="set-card ${meta.cls}" onclick="selectSet(${n})"><span class="set-card-badge">${meta.badge}</span><div class="set-emoji-combo">${meta.icons.map(([icon,label])=>`<span><b>${icon}</b><small>${label}</small></span>`).join('')}</div><strong>${n}인 세트</strong><span class="set-size">${meta.size} 전용</span><span class="set-copy">${meta.copy}</span><span class="set-price">${money(meta.price)}</span><span class="set-action">선택하기 →</span></button>`}).join('')}</div><div class="notice set-notice">세트메뉴는 수타도우 전용이며 선택한 세트에 따라 사이즈가 자동 적용됩니다.</div></section>`,{auto:true});
- if(state.step==='pizzaMode')return shell(`<section class="topping-choice"><h1 class="title">피자 구성을 선택해 주세요</h1><p class="sub">하프앤하프는 L/F 사이즈에서만 가능하며 추가금 1,000원이 발생합니다.</p><div class="topping-choice-grid"><button type="button" class="topping-choice-card add" onclick="selectPizzaMode('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip" onclick="selectPizzaMode('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></section>`,{auto:true});
+ if(state.step==='pizzaMode'){
+  const combinedModeCrust=(state.set===3||state.set===4||state.promo==='upup');
+  if(combinedModeCrust){
+   const crusts=[
+    {name:'오리지널',desc:'추가금 없음',disabled:false},
+    {name:'골드링',desc:state.promo==='upup'?'무료 업그레이드':`+${money(crustOptionPrice('골드링'))}`,disabled:false},
+    {name:'치즈롤',desc:state.promo==='upup'?'무료 업그레이드':`+${money(crustOptionPrice('치즈롤'))}`,disabled:false},
+    {name:'씬',desc:'이 주문에서는 선택 불가',disabled:true}
+   ];
+   return shell(`<section class="mode-crust-combined"><h1 class="title">피자 구성과 크러스트를 선택해 주세요</h1><p class="sub">한 판 또는 하프앤하프를 선택한 뒤 크러스트까지 한 화면에서 선택해 주세요.</p><div class="base-section"><h2>1. 피자 구성</h2><div class="topping-choice-grid"><button type="button" class="topping-choice-card add ${state.pizzaMode==='single'?'selected':''}" onclick="selectPizzaModeCombined('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip ${state.pizzaMode==='half'?'selected':''}" onclick="selectPizzaModeCombined('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></div><div class="base-section"><h2>2. 크러스트</h2><div class="base-choice-grid four">${crusts.map(c=>`<button class="base-choice-card ${state.crust===c.name?'selected':''} ${c.disabled?'disabled':''}" onclick="selectModeCrustCombined('${c.name}')"><strong>${c.name}</strong><small>${c.desc}</small></button>`).join('')}</div></div><button class="btn primary combined-confirm" ${!state.pizzaMode||!state.crust?'disabled':''} onclick="confirmModeCrustCombined()">피자 선택으로 이동 →</button></section>`,{auto:true});
+  }
+  return shell(`<section class="topping-choice"><h1 class="title">피자 구성을 선택해 주세요</h1><p class="sub">하프앤하프는 L/F 사이즈에서만 가능하며 추가금 1,000원이 발생합니다.</p><div class="topping-choice-grid"><button type="button" class="topping-choice-card add" onclick="selectPizzaMode('single')"><span class="choice-icon">🍕</span><strong>한 판</strong><span>한 가지 피자로 주문합니다</span></button><button type="button" class="topping-choice-card skip" onclick="selectPizzaMode('half')"><span class="choice-icon">◐</span><strong>하프앤하프</strong><span>두 가지 피자 반반 +1,000원</span></button></div></section>`,{auto:true});
+ }
  if(state.step==='dough'){
-  if(state.promo==='normal'){
+  if(state.promo==='normal'||state.promo==='takeout'){
    const crusts=combinedCrustOptions();
    return shell(`<section class="base-combined-screen"><h1 class="title">도우 · 사이즈 · 크러스트를 선택해 주세요</h1><p class="sub">한 화면에서 순서대로 선택할 수 있습니다. 선택 가능한 항목만 활성화됩니다.</p><div class="base-section"><h2>1. 도우 타입</h2><div class="base-choice-grid two"><button class="base-choice-card ${state.dough==='hand'?'selected':''}" onclick="selectDoughCombined('hand')"><span>🍕</span><strong>수타도우</strong><small>R · L · F 선택 가능</small></button><button class="base-choice-card ${state.dough==='thin'?'selected':''}" onclick="selectDoughCombined('thin')"><span>◯</span><strong>씬도우</strong><small>F 사이즈 전용</small></button></div></div><div class="base-section"><h2>2. 사이즈</h2><div class="base-choice-grid three">${[['R','레귤러','23cm · 1~2인'],['L','라지','31cm · 2~3인'],['F','패밀리','36cm · 3~4인']].map(([id,name,desc])=>{const disabled=state.dough==='thin'&&id!=='F';return `<button class="base-choice-card ${state.size===id?'selected':''} ${disabled?'disabled':''}" onclick="selectSizeCombined('${id}')"><strong>${name}</strong><small>${desc}</small></button>`}).join('')}</div></div><div class="base-section"><h2>3. 크러스트</h2><div class="base-choice-grid four">${crusts.map(c=>`<button class="base-choice-card ${state.crust===c.name?'selected':''} ${c.disabled?'disabled':''}" onclick="selectCrustCombined('${c.name}')"><strong>${c.name}</strong><small>${c.disabled?'현재 선택에서 이용 불가':c.name==='오리지널'||c.name==='씬'?'추가금 없음':state.size==='L'?'+4,000원':'+5,000원'}</small></button>`).join('')}</div></div><button class="btn primary combined-confirm" ${!state.dough||!state.size||!state.crust?'disabled':''} onclick="confirmCombinedBase()">피자 선택으로 이동 →</button></section>`,{auto:true});
   }
@@ -1055,6 +1067,19 @@ function selectOrderType(type){
  state.orderType=type;state.promo=null;state.set=null;
  if(type==='dinein'){subscribeSeats();state.step='partySize';}else{state.pickupMode=null;state.pickupHour=null;state.pickupMinute=null;state.pickupTime=null;state.phone='010';state.phoneDisplay='010-';state.phonePrefixCleared=false;state.step='pickup';}
  render();
+}
+function selectPizzaModeCombined(mode){
+ state.pizzaMode=mode;state.pizza=null;state.pizzaLeft=null;state.pizzaRight=null;state.halfStage='left';
+ if(mode==='half'&&state.set===2)return alert('2인 세트는 하프앤하프를 선택할 수 없습니다.');
+ render();
+}
+function selectModeCrustCombined(crust){
+ if(crust==='씬')return;
+ state.dough='hand';state.crust=crust;state.pizza=null;render();
+}
+function confirmModeCrustCombined(){
+ if(!state.pizzaMode||!state.crust)return alert('피자 구성과 크러스트를 모두 선택해 주세요.');
+ state.step='pizza';render();
 }
 function selectPizzaMode(mode){
  state.pizzaMode=mode;state.pizza=null;state.pizzaLeft=null;state.pizzaRight=null;state.halfStage='left';
@@ -1230,7 +1255,7 @@ async function back(){
  if(state.step==='pizza'&&isHalf()&&state.halfStage==='right'){state.halfStage='left';state.pizzaRight=null;render();return;}
  if(state.step==='crust'&&state.set){state.step='pizzaMode';render();return;}
  if(state.step==='crust'&&state.promo==='upup'){state.step='pizzaMode';render();return;}
- const map={type:'home',partySize:'type',pickup:'type',pickupTime:'pickup',phone:state.orderType==='dinein'?'seatSelect':(state.pickupMode==='reserve'?'pickupTime':'pickup'),seatZone:'partySize',seatSelect:'seatZone',waiting:'seatSelect',waitingDone:'home',promo:state.orderType==='dinein'?'seatSelect':'phone',setChoice:'promo',pizzaMode:state.set?'setChoice':'promo',dough:'pizzaMode',size:'dough',crust:'size',pizza:(state.promo==='normal'?'dough':'crust'),topping:'pizza',side:'topping',drink:'side',review:'drink',cart:'promo'};
+ const map={type:'home',partySize:'type',pickup:'type',pickupTime:'pickup',phone:state.orderType==='dinein'?'seatSelect':(state.pickupMode==='reserve'?'pickupTime':'pickup'),seatZone:'partySize',seatSelect:'seatZone',waiting:'seatSelect',waitingDone:'home',promo:state.orderType==='dinein'?'seatSelect':'phone',setChoice:'promo',pizzaMode:state.set?'setChoice':'promo',dough:'pizzaMode',size:'dough',crust:'size',pizza:((state.set===3||state.set===4||state.promo==='upup')?'pizzaMode':((state.promo==='normal'||state.promo==='takeout')?'dough':'crust')),topping:'pizza',side:'topping',drink:'side',review:'drink',cart:'promo'};
  state.step=map[state.step]||'home';render();
 }
 
@@ -1277,3 +1302,5 @@ function applyUILanguage(){
 function render(){homeLanguage='ko';localStorage.setItem('papaHomeLanguage','ko');document.documentElement.lang='ko';renderBase();}
 
 render();
+
+// v40.17: 포장20% 통합 기본옵션, 3·4인 세트/UP&UP 피자구성+크러스트 통합 화면
