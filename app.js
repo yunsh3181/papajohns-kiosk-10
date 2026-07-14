@@ -7,6 +7,8 @@ const labels={waiting:'줄서기',waitingDone:'줄서기 완료',type:'이용방
 // 테스트 기간 임시 설정: true이면 먹고가기 구역 운영시간 제한을 무시합니다.
 // 운영 전에는 false로 변경하세요.
 const DINEIN_TEST_MODE=true;
+// 테스트 중 무동작 경고/좌석 자동 해제를 비활성화합니다. 운영 전 false로 변경하세요.
+const DISABLE_IDLE_RESET=true;
 
 const STORE_OPEN_MIN=11*60;
 const STORE_CLOSE_MIN=21*60;
@@ -156,9 +158,9 @@ function zoneCapacityText(zoneId){
 }
 
 function clearHoldTimers(){if(holdWarnTimer)clearTimeout(holdWarnTimer);if(holdReleaseTimer)clearTimeout(holdReleaseTimer);holdWarnTimer=holdReleaseTimer=null}
-function armHoldTimers(){clearHoldTimers();if(!state.seatId)return;holdWarnTimer=setTimeout(()=>{if(!state.seatId||state.step==='done')return;const keep=confirm('좌석 선택 후 10초 동안 조작이 없습니다.\n10초 후 좌석이 자동으로 해제됩니다.\n계속 주문하시겠습니까?');if(keep)armHoldTimers()},HOLD_WARN_MS);holdReleaseTimer=setTimeout(async()=>{if(!state.seatId||state.step==='done')return;await releaseCurrentSeat();alert('20초 동안 조작이 없어 좌석이 자동으로 해제되었습니다.');state.step='seatZone';render()},HOLD_RELEASE_MS)}
-document.addEventListener('click',()=>{if(state.seatId&&state.step!=='done')armHoldTimers()},{passive:true});
-document.addEventListener('touchstart',()=>{if(state.seatId&&state.step!=='done')armHoldTimers()},{passive:true});
+function armHoldTimers(){clearHoldTimers();if(DISABLE_IDLE_RESET||!state.seatId)return;holdWarnTimer=setTimeout(()=>{if(DISABLE_IDLE_RESET||!state.seatId||state.step==='done')return;const keep=confirm('좌석 선택 후 10초 동안 조작이 없습니다.\n10초 후 좌석이 자동으로 해제됩니다.\n계속 주문하시겠습니까?');if(keep)armHoldTimers()},HOLD_WARN_MS);holdReleaseTimer=setTimeout(async()=>{if(DISABLE_IDLE_RESET||!state.seatId||state.step==='done')return;await releaseCurrentSeat();alert('20초 동안 조작이 없어 좌석이 자동으로 해제되었습니다.');state.step='seatZone';render()},HOLD_RELEASE_MS)}
+document.addEventListener('click',()=>{if(!DISABLE_IDLE_RESET&&state.seatId&&state.step!=='done')armHoldTimers()},{passive:true});
+document.addEventListener('touchstart',()=>{if(!DISABLE_IDLE_RESET&&state.seatId&&state.step!=='done')armHoldTimers()},{passive:true});
 
 function resetAfter(key){const order=['dough','size','crust','pizza'];const i=order.indexOf(key);order.slice(i+1).forEach(k=>state[k]=null);state.toppings={};}
 function crustOptionPrice(crust){

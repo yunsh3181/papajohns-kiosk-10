@@ -2509,3 +2509,129 @@ html,body{
   box-shadow:0 0 0 4px rgba(71,197,123,.18),0 18px 42px rgba(0,0,0,.38)!important;
   transform:translateY(-2px);
 }
+
+
+/* =========================================================
+   PAPA OS v40.14 — test usability & contrast patch
+   2026-07-14
+   ========================================================= */
+
+/* 전화번호 패드: 선택하기를 0 오른쪽(4행 3열)에 고정하고 항상 레드 계열로 표시 */
+.dark-app-shell .phone-screen-v33 .number-pad{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.dark-app-shell .phone-screen-v33 .number-pad .phone-confirm-btn{
+  grid-column:3!important;
+  grid-row:4!important;
+  background:#d71920!important;
+  color:#fff!important;
+  border-color:#ff686e!important;
+  opacity:1!important;
+}
+.dark-app-shell .phone-screen-v33 .number-pad .phone-confirm-btn:disabled{
+  background:#7f171b!important;
+  color:#f3d7d8!important;
+  border-color:#9d3034!important;
+  opacity:.82!important;
+}
+
+/* 피자 구성 한 판 / 하프앤하프 텍스트 강제 대비 */
+.dark-app-shell .topping-choice .topping-choice-card strong,
+.dark-app-shell .topping-choice .topping-choice-card.add strong,
+.dark-app-shell .topping-choice .topping-choice-card.skip strong{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  opacity:1!important;
+}
+.dark-app-shell .topping-choice .topping-choice-card span:last-child{
+  color:#dce9e1!important;
+  -webkit-text-fill-color:#dce9e1!important;
+  opacity:1!important;
+}
+
+/* 하프앤하프 미리보기의 흰 이미지 배경을 주변 다크 톤에 자연스럽게 혼합 */
+.dark-app-shell .half-preview{
+  background:linear-gradient(145deg,#10291e,#08150f)!important;
+  border-color:rgba(77,194,124,.45)!important;
+}
+.dark-app-shell .half-pizza-visual{
+  background:#10231a!important;
+  border-color:#183a2a!important;
+}
+.dark-app-shell .half-slice{
+  background-color:#10231a!important;
+  background-blend-mode:multiply!important;
+}
+.dark-app-shell .half-preview-copy strong{color:#fff!important}
+.dark-app-shell .half-preview-copy span{color:#cfe0d5!important}
+
+/* 일반 주문 도우 타입 카드를 크게 확장 */
+.dark-app-shell .dough-card-grid{
+  max-width:1120px!important;
+  grid-template-columns:repeat(2,minmax(380px,1fr))!important;
+  gap:30px!important;
+}
+.dark-app-shell .dough-card-grid .crust-image-card{
+  min-height:540px!important;
+  border-radius:32px!important;
+}
+.dark-app-shell .dough-card-grid .crust-image-card img{
+  height:320px!important;
+  object-fit:cover!important;
+  background:#10231a!important;
+}
+.dark-app-shell .dough-card-grid .crust-card-body{
+  padding:26px 28px 30px!important;
+}
+.dark-app-shell .dough-card-grid .crust-card-body strong{
+  font-size:36px!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+.dark-app-shell .dough-card-grid .crust-card-body>span{
+  font-size:19px!important;
+  line-height:1.5!important;
+  color:#d6e5dc!important;
+  min-height:auto!important;
+}
+.dark-app-shell .dough-card-grid .crust-card-body em{
+  font-size:17px!important;
+}
+
+/* 오리지널 / 골드링 / 치즈롤 / 씬 텍스트를 마지막 우선순위로 강제 */
+.dark-app-shell .crust-v40 .crust-image-card .crust-card-body strong,
+.dark-app-shell .dough-card-grid .crust-image-card .crust-card-body strong{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  opacity:1!important;
+}
+.dark-app-shell .crust-v40 .crust-image-card .crust-card-body>span,
+.dark-app-shell .dough-card-grid .crust-image-card .crust-card-body>span{
+  color:#d7e5dc!important;
+  -webkit-text-fill-color:#d7e5dc!important;
+  opacity:1!important;
+}
+
+@media(max-width:900px){
+  .dark-app-shell .dough-card-grid{
+    grid-template-columns:1fr!important;
+    max-width:620px!important;
+    gap:18px!important;
+  }
+  .dark-app-shell .dough-card-grid .crust-image-card{min-height:390px!important}
+  .dark-app-shell .dough-card-grid .crust-image-card img{height:230px!important}
+}
+@media(max-width:560px){
+  .dark-app-shell .dough-card-grid .crust-image-card{
+    min-height:220px!important;
+    grid-template-columns:145px 1fr!important;
+  }
+  .dark-app-shell .dough-card-grid .crust-image-card img{
+    width:145px!important;
+    height:220px!important;
+  }
+  .dark-app-shell .dough-card-grid .crust-card-body{padding:18px 15px!important}
+  .dark-app-shell .dough-card-grid .crust-card-body strong{font-size:25px!important}
+  .dark-app-shell .dough-card-grid .crust-card-body>span{font-size:14px!important}
+}
